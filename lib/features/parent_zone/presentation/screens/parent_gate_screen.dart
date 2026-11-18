@@ -435,14 +435,15 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
 
   Future<void> _checkUpdateOnEnteringParentZone() async {
     try {
+      // Limpiar cualquier residuo previo para que siempre avise si no actualizó
       final prefs = await SharedPreferences.getInstance();
-      final dismissedVersion = prefs.getString('dismissed_update_version');
+      await prefs.remove('dismissed_update_version');
 
       if (!mounted) return;
       ref.read(updateProvider.notifier).checkForUpdates(
             isManual: false,
             context: context,
-            dismissedVersion: dismissedVersion,
+            dismissedVersion: null,
           );
     } catch (_) {}
   }

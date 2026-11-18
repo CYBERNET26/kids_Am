@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kids_am/core/constants/app_colors.dart';
 import 'package:kids_am/features/updater/domain/models/app_update_info.dart';
 import 'package:kids_am/features/updater/presentation/providers/update_provider.dart';
@@ -153,12 +152,8 @@ class UpdateDialog extends ConsumerWidget {
                   // Botón 2: Cancelar
                   if (!isDownloading) ...[
                     TextButton(
-                      onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('dismissed_update_version', updateInfo.version);
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                        }
+                      onPressed: () {
+                        Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.textMuted,
