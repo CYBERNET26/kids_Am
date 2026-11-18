@@ -60,7 +60,7 @@ final List<VideoItem> defaultEducationalVideos = [
     id: 'vid_default_04',
     title: 'Piensa fuera del corral | Tuttle Twins en Español | T2E4',
     description: 'Después de que su equipo de softbol comienza a romper las reglas, los mellizos saltan a través de famosos cuadros, conocen a George Washington e intentan salvar una granja dividida de un lobo feroz y el peligroso tribalismo.',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=d_Z89M5L1n8',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=SqUJxWIRgWU&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=9',
     sourceType: VideoSourceType.youtube,
     category: 'Educación Económica',
     rewardStars: 3,
