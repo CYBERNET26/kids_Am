@@ -203,6 +203,14 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
                     onTap: () => context.push('/games/chess'),
                   ),
                   _WorldCard(
+                    title: 'Rincón de Cuentos',
+                    subtitle: 'Lectura y Preguntas',
+                    badgeText: 'Gana Estrellas ⭐',
+                    icon: Icons.menu_book_rounded,
+                    gradientColors: const [Color(0xFFE91E63), Color(0xFFFF6090)],
+                    onTap: () => context.push('/stories'),
+                  ),
+                  _WorldCard(
                     title: 'Rompecabezas',
                     subtitle: 'Nivel ${profile.puzzleLevel} de 5',
                     badgeText: 'Puzles y Figuras',

@@ -32,7 +32,7 @@ class AppUpdateInfo {
       title: map['title'] as String? ?? 'Nueva versión disponible',
       releaseDate: map['releaseDate'] as String? ?? '',
       changelog: map['changelog'] as String? ?? 'Mejoras y correcciones generales.',
-      apkFileName: map['apkFileName'] as String? ?? 'KidsAm-Installer-v1.0.0.apk',
+      apkFileName: map['apkFileName'] as String? ?? AppVersion.getApkFileName(version),
       downloadUrl: map['downloadUrl'] as String? ?? '',
       isUpdateAvailable: isNewer,
     );

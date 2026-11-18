@@ -4,7 +4,6 @@ class UpdateConfig {
   static const String defaultBranch = 'main';
 
   // Si el repositorio es privado, GitHub requiere un Personal Access Token (PAT).
-  // Puede configurarse aquí por defecto o desde el Panel de Padres en Ajustes.
   static const String defaultGithubToken = '';
 
   static String get releasesApiUrl =>
@@ -17,5 +16,10 @@ class UpdateConfig {
       'https://raw.githubusercontent.com/$repoOwner/$repoName/$defaultBranch/version.json';
 
   static String get rawApkDownloadUrl =>
-      'https://raw.githubusercontent.com/$repoOwner/$repoName/$defaultBranch/KidsAm-Installer-v1.0.0.apk';
+      'https://raw.githubusercontent.com/$repoOwner/$repoName/$defaultBranch/KidsAm-installer-v1.0.1.apk';
+
+  static String getApkDownloadUrl(String version) {
+    final clean = version.replaceAll('v', '').trim();
+    return 'https://raw.githubusercontent.com/$repoOwner/$repoName/$defaultBranch/KidsAm-installer-v$clean.apk';
+  }
 }

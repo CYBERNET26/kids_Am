@@ -7,6 +7,9 @@ import 'package:kids_am/features/video_library/presentation/screens/safe_video_p
 import 'package:kids_am/features/games/visual_math/presentation/screens/visual_math_screen.dart';
 import 'package:kids_am/features/games/chess/presentation/screens/chess_game_screen.dart';
 import 'package:kids_am/features/games/puzzle/presentation/screens/puzzle_game_screen.dart';
+import 'package:kids_am/features/stories/domain/models/story_item.dart';
+import 'package:kids_am/features/stories/presentation/screens/stories_catalog_screen.dart';
+import 'package:kids_am/features/stories/presentation/screens/story_reader_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -18,6 +21,19 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/parent-gate',
       builder: (context, state) => const ParentGateScreen(),
+    ),
+    GoRoute(
+      path: '/stories',
+      builder: (context, state) => const StoriesCatalogScreen(),
+      routes: [
+        GoRoute(
+          path: 'read',
+          builder: (context, state) {
+            final story = state.extra as StoryItem;
+            return StoryReaderScreen(story: story);
+          },
+        ),
+      ],
     ),
     GoRoute(
       path: '/videos',

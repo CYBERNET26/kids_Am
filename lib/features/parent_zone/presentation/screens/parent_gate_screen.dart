@@ -14,6 +14,7 @@ import 'package:kids_am/features/parent_zone/presentation/providers/custom_exerc
 import 'package:kids_am/features/parent_zone/domain/models/background_settings.dart';
 import 'package:kids_am/features/parent_zone/presentation/providers/background_settings_provider.dart';
 import 'package:kids_am/features/parent_zone/presentation/widgets/background_customizer_dialog.dart';
+import 'package:kids_am/features/stories/presentation/providers/stories_provider.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -1557,6 +1558,8 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   Widget _buildSettingsTab() {
     final bgSettings = ref.watch(backgroundSettingsProvider);
     final bgNotifier = ref.read(backgroundSettingsProvider.notifier);
+    final storiesState = ref.watch(storiesProvider);
+    final storiesNotifier = ref.read(storiesProvider.notifier);
 
     return Center(
       child: ConstrainedBox(
@@ -1701,6 +1704,90 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // SECCIÓN: PUNTOS EN CUENTOS (COMPRENSIÓN LECTORA)
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.menu_book_rounded, color: Colors.deepPurple, size: 24),
+                        SizedBox(width: 8),
+                        Text(
+                          'Puntos de Cuentos (Comprensión)',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Define cuántas estrellas gana el niño por cada respuesta correcta en las preguntas del cuento:',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.star_rounded, color: Colors.orange, size: 28),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${storiesState.starsPerCorrectQuestion} estrella${storiesState.starsPerCorrectQuestion > 1 ? 's' : ''} por acierto',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline, color: Colors.deepPurple, size: 28),
+                                onPressed: storiesState.starsPerCorrectQuestion > 1
+                                    ? () => storiesNotifier.setStarsPerCorrectQuestion(
+                                          storiesState.starsPerCorrectQuestion - 1,
+                                        )
+                                    : null,
+                                tooltip: 'Menos estrellas',
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add_circle_outline, color: Colors.deepPurple, size: 28),
+                                onPressed: storiesState.starsPerCorrectQuestion < 20
+                                    ? () => storiesNotifier.setStarsPerCorrectQuestion(
+                                          storiesState.starsPerCorrectQuestion + 1,
+                                        )
+                                    : null,
+                                tooltip: 'Más estrellas',
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],

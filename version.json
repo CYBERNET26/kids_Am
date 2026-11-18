@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
-  "versionCode": 1,
-  "title": "Kids Am v1.0.0 - Versión Inicial Estable",
+  "version": "1.0.1",
+  "versionCode": 2,
+  "title": "Kids Am v1.0.1 - Rincón de Cuentos y Pantalla Completa",
   "releaseDate": "2026-11-18",
-  "changelog": "### 🚀 Novedades y Agregados:\n• Incorporación de 12 episodios educativos de Tuttle Twins en Español.\n• Módulo de ejercicios personalizados creados por los padres.\n• Preámbulos explicativos interactivos con voz didáctica (Suma, Resta, Multiplicación y División).\n• Sistema de progresión de 100 ejercicios por nivel con dificultad creciente.\n• Tienda de recompensas para canje de estrellas elegidas por los padres.\n• Personalización del color de fondo y sistema de dibujos con prevención de solapamiento.\n• Botones limpios, centrados y sin descripciones redundantes.\n\n### 🔧 Mejoras y Correcciones:\n• Compatibilidad optimizada para Android 13 en adelante (API 34).\n• Detección y visibilidad de motores Text-to-Speech (TTS_SERVICE).\n• Aceleración de hardware y reproducción fluida de videos en la app.\n\n### 🗑️ Eliminado:\n• Se eliminaron bloques repetitivos de un solo tipo de ejercicio (ahora son combinados y dinámicos).",
-  "apkFileName": "KidsAm-Installer-v1.0.0.apk",
-  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-Installer-v1.0.0.apk"
+  "changelog": "### 🚀 Novedades y Agregados:\n• Nuevo apartado «Rincón de Cuentos» (Comprensión Lectora) con historias mágicas y preguntas interactivas.\n• Recompensa de estrellas por cada respuesta correcta en cuentos.\n• Selector configurable por los padres en el Panel Parental para definir las estrellas por acierto en cuentos.\n• Modo inmersivo en pantalla completa horizontal para videos educativos.\n• Sistema de versionado continuo (v1.0.1).\n\n### 🔧 Mejoras:\n• Eliminación de opciones manuales de búsqueda: la app avisa sola cuando hay una actualización disponible.\n• Fluidez y estabilidad mejoradas en todas las actividades.",
+  "apkFileName": "KidsAm-installer-v1.0.1.apk",
+  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.1.apk"
 }
