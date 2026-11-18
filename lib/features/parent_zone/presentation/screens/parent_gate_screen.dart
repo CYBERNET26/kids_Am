@@ -9,6 +9,8 @@ import 'package:kids_am/features/profile/presentation/providers/profile_provider
 import 'package:kids_am/features/video_library/presentation/providers/video_library_provider.dart';
 import 'package:kids_am/features/rewards/domain/models/reward_item.dart';
 import 'package:kids_am/features/rewards/presentation/providers/rewards_provider.dart';
+import 'package:kids_am/features/parent_zone/domain/models/custom_exercise.dart';
+import 'package:kids_am/features/parent_zone/presentation/providers/custom_exercises_provider.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -410,7 +412,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     final profile = ref.read(childProfileProvider);
     _childNameController = TextEditingController(text: profile.name);
     _loadSettings();
@@ -847,9 +849,10 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
           unselectedLabelColor: AppColors.textMuted,
           indicatorColor: AppColors.primaryBlue,
           indicatorWeight: 3,
-          isScrollable: false,
+          isScrollable: true,
           tabs: const [
             Tab(icon: Icon(Icons.video_library), text: 'Videos'),
+            Tab(icon: Icon(Icons.calculate_rounded), text: 'Ejercicios'),
             Tab(icon: Icon(Icons.card_giftcard), text: 'Premios'),
             Tab(icon: Icon(Icons.person_pin), text: 'Perfil'),
             Tab(icon: Icon(Icons.settings), text: 'Ajustes'),
@@ -861,6 +864,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
           controller: _tabController,
           children: [
             _buildVideosTab(),
+            _buildExercisesTab(),
             _buildRewardsTab(),
             _buildProfileTab(),
             _buildSettingsTab(),
@@ -926,6 +930,333 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                           onPressed: () {
                             ref.read(videoLibraryProvider.notifier).removeVideo(video.id);
                           },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  void _showCustomExerciseDialog([CustomExercise? exercise]) {
+    final isEditing = exercise != null;
+    MathOperation selectedOp = exercise?.operation ?? MathOperation.addition;
+    final numAController = TextEditingController(text: exercise != null ? '${exercise.firstNum}' : '5');
+    final numBController = TextEditingController(text: exercise != null ? '${exercise.secondNum}' : '3');
+    final noteController = TextEditingController(text: exercise?.note ?? '');
+
+    int calculateAutoResult(MathOperation op, int a, int b) {
+      switch (op) {
+        case MathOperation.addition:
+          return a + b;
+        case MathOperation.subtraction:
+          return a - b;
+        case MathOperation.multiplication:
+          return a * b;
+        case MathOperation.division:
+          return b != 0 ? a ~/ b : 0;
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final a = int.tryParse(numAController.text.trim()) ?? 0;
+            final b = int.tryParse(numBController.text.trim()) ?? 0;
+            final autoResult = calculateAutoResult(selectedOp, a, b);
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: Row(
+                children: [
+                  Icon(
+                    isEditing ? Icons.edit : Icons.add_circle,
+                    color: AppColors.primaryBlue,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(isEditing ? 'Editar Ejercicio' : 'Crear Ejercicio'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Diseña un ejercicio personalizado para que tu hijo lo resuelva en Mundo Matemático:',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Operación:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: MathOperation.values.map((op) {
+                        final isSel = selectedOp == op;
+                        return ChoiceChip(
+                          label: Text('${op.symbol} ${op.label}'),
+                          selected: isSel,
+                          selectedColor: AppColors.primaryBlue.withValues(alpha: 0.25),
+                          onSelected: (val) {
+                            if (val) setDialogState(() => selectedOp = op);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: numAController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Primer Número',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onChanged: (_) => setDialogState(() {}),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            selectedOp.symbol,
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: TextField(
+                            controller: numBController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Segundo Número',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onChanged: (_) => setDialogState(() {}),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Resultado:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(
+                            '$a ${selectedOp.symbol} $b = $autoResult',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: noteController,
+                      decoration: InputDecoration(
+                        labelText: 'Mensaje especial o pista (opcional)',
+                        hintText: 'Ej: ¡Práctica para la prueba escolar!',
+                        prefixIcon: const Icon(Icons.favorite, color: Colors.pinkAccent),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () {
+                    final first = int.tryParse(numAController.text.trim()) ?? 0;
+                    final second = int.tryParse(numBController.text.trim()) ?? 0;
+                    if (selectedOp == MathOperation.division && second == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No es posible dividir por 0.')),
+                      );
+                      return;
+                    }
+                    final res = calculateAutoResult(selectedOp, first, second);
+                    if (isEditing) {
+                      ref.read(customExercisesProvider.notifier).updateExercise(
+                            id: exercise.id,
+                            operation: selectedOp,
+                            firstNum: first,
+                            secondNum: second,
+                            correctResult: res,
+                            note: noteController.text.trim(),
+                          );
+                    } else {
+                      ref.read(customExercisesProvider.notifier).addExercise(
+                            operation: selectedOp,
+                            firstNum: first,
+                            secondNum: second,
+                            correctResult: res,
+                            note: noteController.text.trim(),
+                          );
+                    }
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(isEditing ? '¡Ejercicio actualizado con éxito!' : '¡Ejercicio creado con éxito!')),
+                    );
+                  },
+                  child: Text(isEditing ? 'Guardar Cambios' : 'Crear Ejercicio'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildExercisesTab() {
+    final exercises = ref.watch(customExercisesProvider);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Ejercicios Creados (${exercises.length})',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showCustomExerciseDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('Crear Ejercicio'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: exercises.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.calculate_outlined, size: 64, color: AppColors.textMuted),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'No hay ejercicios creados aún.',
+                          style: TextStyle(fontSize: 16, color: AppColors.textMuted),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Puedes diseñar sumas, restas, multiplicaciones o divisiones a medida para que tu hijo las resuelva.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () => _showCustomExerciseDialog(),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Crear Primer Ejercicio'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: exercises.length,
+                  itemBuilder: (context, index) {
+                    final item = exercises[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      elevation: 2,
+                      child: ListTile(
+                        leading: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryBlue.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Center(
+                            child: Text(
+                              item.operation.symbol,
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          '${item.firstNum} ${item.operation.symbol} ${item.secondNum} = ${item.correctResult}',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (item.note.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                item.note,
+                                style: const TextStyle(color: Colors.pinkAccent, fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                            const SizedBox(height: 2),
+                            Text(
+                              item.isCompleted ? '✅ Resuelto por el niño' : '⏳ Pendiente de resolver',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: item.isCompleted ? Colors.green : Colors.orange.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit_rounded, color: Colors.blue),
+                              tooltip: 'Editar',
+                              onPressed: () => _showCustomExerciseDialog(item),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                              tooltip: 'Eliminar',
+                              onPressed: () {
+                                ref.read(customExercisesProvider.notifier).deleteExercise(item.id);
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     );

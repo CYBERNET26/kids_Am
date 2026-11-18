@@ -9,7 +9,7 @@ class ChildProfileNotifier extends Notifier<ChildProfile> {
 
   static const _defaultProfile = ChildProfile(
     id: 'child_1',
-    name: 'Leo',
+    name: 'Alma',
     age: 6,
     totalStars: 10,
     mathLevel: 1,
