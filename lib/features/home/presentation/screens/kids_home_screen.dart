@@ -6,6 +6,7 @@ import 'package:kids_am/core/services/teacher_voice_service.dart';
 import 'package:kids_am/core/widgets/playful_background.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/rewards/presentation/widgets/rewards_shop_dialog.dart';
+import 'package:kids_am/features/updater/presentation/providers/update_provider.dart';
 
 class KidsHomeScreen extends ConsumerStatefulWidget {
   const KidsHomeScreen({super.key});
@@ -33,6 +34,16 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
       final greeting = '¡Hola ${profile.name}! ¡Qué bueno que volviste! Elige tu aventura de hoy.';
       TeacherVoiceService.instance.speak(greeting);
     }
+
+    // Comprobación de actualizaciones en segundo plano desde el repositorio privado de GitHub
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        final updateState = ref.read(updateProvider);
+        if (updateState.autoCheckOnStart) {
+          ref.read(updateProvider.notifier).checkForUpdates(context: context);
+        }
+      }
+    });
   }
 
   @override

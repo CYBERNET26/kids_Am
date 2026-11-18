@@ -14,6 +14,8 @@ import 'package:kids_am/features/parent_zone/presentation/providers/custom_exerc
 import 'package:kids_am/features/parent_zone/domain/models/background_settings.dart';
 import 'package:kids_am/features/parent_zone/presentation/providers/background_settings_provider.dart';
 import 'package:kids_am/features/parent_zone/presentation/widgets/background_customizer_dialog.dart';
+import 'package:kids_am/core/constants/app_version.dart';
+import 'package:kids_am/features/updater/presentation/providers/update_provider.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -411,6 +413,8 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   String _selectedRewardIcon = '🎁';
 
   bool _voiceEnabled = true;
+  late final TextEditingController _githubTokenController;
+  bool _obscureToken = true;
 
   @override
   void initState() {
@@ -418,6 +422,8 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _tabController = TabController(length: 5, vsync: this);
     final profile = ref.read(childProfileProvider);
     _childNameController = TextEditingController(text: profile.name);
+    final initialToken = ref.read(updateProvider).githubToken;
+    _githubTokenController = TextEditingController(text: initialToken);
     _loadSettings();
   }
 
@@ -439,6 +445,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _rewardTitleController.dispose();
     _rewardStarsController.dispose();
     _rewardDescController.dispose();
+    _githubTokenController.dispose();
     super.dispose();
   }
 
@@ -1557,6 +1564,8 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   Widget _buildSettingsTab() {
     final bgSettings = ref.watch(backgroundSettingsProvider);
     final bgNotifier = ref.read(backgroundSettingsProvider.notifier);
+    final updateState = ref.watch(updateProvider);
+    final updateNotifier = ref.read(updateProvider.notifier);
 
     return Center(
       child: ConstrainedBox(
@@ -1724,6 +1733,151 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                   await prefs.setBool('parent_voice_enabled', val);
                   TeacherVoiceService.instance.isEnabled = val;
                 },
+              ),
+            ),
+            const SizedBox(height: 12),
+            // SECCIÓN: ACTUALIZACIONES DE LA APP (GITHUB)
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.system_update_alt_rounded, color: AppColors.primaryBlue, size: 24),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Actualizaciones de la App',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryBlue.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'v${AppVersion.currentVersion}',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Conectado al repositorio privado de GitHub para actualizar la aplicación directamente sin perder datos ni configuraciones.',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 14),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Buscar actualizaciones al iniciar',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: const Text(
+                        'Avisa con un cartel emergente si hay una nueva versión disponible',
+                        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                      ),
+                      value: updateState.autoCheckOnStart,
+                      activeTrackColor: AppColors.playfulGreen,
+                      onChanged: (val) {
+                        updateNotifier.setAutoCheckOnStart(val);
+                      },
+                    ),
+                    const Divider(height: 20),
+                    const Text(
+                      'Token de Acceso GitHub (Repo Privado):',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _githubTokenController,
+                            obscureText: _obscureToken,
+                            decoration: InputDecoration(
+                              hintText: 'github_pat_... o ghp_...',
+                              hintStyle: const TextStyle(fontSize: 12),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureToken ? Icons.visibility_off : Icons.visibility,
+                                  size: 18,
+                                ),
+                                onPressed: () => setState(() => _obscureToken = !_obscureToken),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await updateNotifier.setGithubToken(_githubTokenController.text);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Token de GitHub guardado correctamente'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          ),
+                          child: const Text('Guardar'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: updateState.status == UpdateStatus.checking
+                            ? null
+                            : () => updateNotifier.checkForUpdates(isManual: true, context: context),
+                        icon: updateState.status == UpdateStatus.checking
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.sync_rounded),
+                        label: Text(
+                          updateState.status == UpdateStatus.checking
+                              ? 'Comprobando en GitHub...'
+                              : 'Buscar Actualizaciones Ahora',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.playfulGreen,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
