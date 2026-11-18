@@ -11,6 +11,9 @@ import 'package:kids_am/features/rewards/domain/models/reward_item.dart';
 import 'package:kids_am/features/rewards/presentation/providers/rewards_provider.dart';
 import 'package:kids_am/features/parent_zone/domain/models/custom_exercise.dart';
 import 'package:kids_am/features/parent_zone/presentation/providers/custom_exercises_provider.dart';
+import 'package:kids_am/features/parent_zone/domain/models/background_settings.dart';
+import 'package:kids_am/features/parent_zone/presentation/providers/background_settings_provider.dart';
+import 'package:kids_am/features/parent_zone/presentation/widgets/background_customizer_dialog.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -877,66 +880,71 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   Widget _buildVideosTab() {
     final videos = ref.watch(videoLibraryProvider);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Videos Habilitados (${videos.length})',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Videos Habilitados (${videos.length})',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _showAddVideoDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Cargar Video'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ],
               ),
-              ElevatedButton.icon(
-                onPressed: _showAddVideoDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Cargar Video'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: videos.isEmpty
-              ? const Center(child: Text('No hay videos cargados aún.'))
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: videos.length,
-                  itemBuilder: (context, index) {
-                    final video = videos[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: video.isYoutube
-                              ? Colors.red.withValues(alpha: 0.15)
-                              : AppColors.primaryBlue.withValues(alpha: 0.15),
-                          child: Icon(
-                            video.isYoutube ? Icons.play_arrow : Icons.videocam,
-                            color: video.isYoutube ? Colors.red : AppColors.primaryBlue,
+            ),
+            Expanded(
+              child: videos.isEmpty
+                  ? const Center(child: Text('No hay videos cargados aún.'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: videos.length,
+                      itemBuilder: (context, index) {
+                        final video = videos[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: video.isYoutube
+                                  ? Colors.red.withValues(alpha: 0.15)
+                                  : AppColors.primaryBlue.withValues(alpha: 0.15),
+                              child: Icon(
+                                video.isYoutube ? Icons.play_arrow : Icons.videocam,
+                                color: video.isYoutube ? Colors.red : AppColors.primaryBlue,
+                              ),
+                            ),
+                            title: Text(video.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text('${video.category} • ⭐ +${video.rewardStars} estrellas • ${video.isYoutube ? "YouTube" : "Directo"}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              tooltip: 'Eliminar video',
+                              onPressed: () {
+                                ref.read(videoLibraryProvider.notifier).removeVideo(video.id);
+                              },
+                            ),
                           ),
-                        ),
-                        title: Text(video.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('${video.category} • ⭐ +${video.rewardStars} estrellas • ${video.isYoutube ? "YouTube" : "Directo"}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
-                          tooltip: 'Eliminar video',
-                          onPressed: () {
-                            ref.read(videoLibraryProvider.notifier).removeVideo(video.id);
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -1134,223 +1142,233 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   Widget _buildExercisesTab() {
     final exercises = ref.watch(customExercisesProvider);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Ejercicios Creados (${exercises.length})',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
-              ),
-              ElevatedButton.icon(
-                onPressed: () => _showCustomExerciseDialog(),
-                icon: const Icon(Icons.add),
-                label: const Text('Crear Ejercicio'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: exercises.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.calculate_outlined, size: 64, color: AppColors.textMuted),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'No hay ejercicios creados aún.',
-                          style: TextStyle(fontSize: 16, color: AppColors.textMuted),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Puedes diseñar sumas, restas, multiplicaciones o divisiones a medida para que tu hijo las resuelva.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: AppColors.textMuted),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () => _showCustomExerciseDialog(),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Crear Primer Ejercicio'),
-                        ),
-                      ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Ejercicios Creados (${exercises.length})',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => _showCustomExerciseDialog(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Crear Ejercicio'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: exercises.length,
-                  itemBuilder: (context, index) {
-                    final item = exercises[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                      elevation: 2,
-                      child: ListTile(
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Center(
-                            child: Text(
-                              item.operation.symbol,
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryBlue,
-                              ),
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          '${item.firstNum} ${item.operation.symbol} ${item.secondNum} = ${item.correctResult}',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+            ),
+            Expanded(
+              child: exercises.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (item.note.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                item.note,
-                                style: const TextStyle(color: Colors.pinkAccent, fontSize: 13, fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                            const SizedBox(height: 2),
-                            Text(
-                              item.isCompleted ? '✅ Resuelto por el niño' : '⏳ Pendiente de resolver',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: item.isCompleted ? Colors.green : Colors.orange.shade700,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            const Icon(Icons.calculate_outlined, size: 64, color: AppColors.textMuted),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'No hay ejercicios creados aún.',
+                              style: TextStyle(fontSize: 16, color: AppColors.textMuted),
                             ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_rounded, color: Colors.blue),
-                              tooltip: 'Editar',
-                              onPressed: () => _showCustomExerciseDialog(item),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Puedes diseñar sumas, restas, multiplicaciones o divisiones a medida para que tu hijo las resuelva.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                              tooltip: 'Eliminar',
-                              onPressed: () {
-                                ref.read(customExercisesProvider.notifier).deleteExercise(item.id);
-                              },
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () => _showCustomExerciseDialog(),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Crear Primer Ejercicio'),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  },
-                ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: exercises.length,
+                      itemBuilder: (context, index) {
+                        final item = exercises[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          elevation: 2,
+                          child: ListTile(
+                            leading: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  item.operation.symbol,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primaryBlue,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              '${item.firstNum} ${item.operation.symbol} ${item.secondNum} = ${item.correctResult}',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (item.note.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    item.note,
+                                    style: const TextStyle(color: Colors.pinkAccent, fontSize: 13, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.isCompleted ? '✅ Resuelto por el niño' : '⏳ Pendiente de resolver',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: item.isCompleted ? Colors.green : Colors.orange.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit_rounded, color: Colors.blue),
+                                  tooltip: 'Editar',
+                                  onPressed: () => _showCustomExerciseDialog(item),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                  tooltip: 'Eliminar',
+                                  onPressed: () {
+                                    ref.read(customExercisesProvider.notifier).deleteExercise(item.id);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildRewardsTab() {
     final rewards = ref.watch(rewardsProvider);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Premios y Recompensas ⭐',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Premios y Recompensas ⭐',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _showAddRewardDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Crear Premio'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.playfulGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ],
               ),
-              ElevatedButton.icon(
-                onPressed: _showAddRewardDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Crear Premio'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.playfulGreen,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: rewards.isEmpty
-              ? const Center(child: Text('No hay premios configurados.'))
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: rewards.length,
-                  itemBuilder: (context, index) {
-                    final reward = rewards[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.sunnyYellow.withValues(alpha: 0.35),
-                          child: Text(reward.icon, style: const TextStyle(fontSize: 24)),
-                        ),
-                        title: Text(reward.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(
-                          reward.description.isNotEmpty
-                              ? '${reward.description} • ⭐ ${reward.costStars} estrellas'
-                              : '⭐ ${reward.costStars} estrellas',
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (reward.timesRedeemed > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppColors.playfulGreen.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Canjeado: ${reward.timesRedeemed}x',
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.playfulGreen),
-                                ),
-                              ),
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, color: AppColors.primaryBlue),
-                              tooltip: 'Modificar premio',
-                              onPressed: () => _showEditRewardDialog(reward),
+            ),
+            Expanded(
+              child: rewards.isEmpty
+                  ? const Center(child: Text('No hay premios configurados.'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: rewards.length,
+                      itemBuilder: (context, index) {
+                        final reward = rewards[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: AppColors.sunnyYellow.withValues(alpha: 0.35),
+                              child: Text(reward.icon, style: const TextStyle(fontSize: 24)),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              tooltip: 'Eliminar premio',
-                              onPressed: () {
-                                ref.read(rewardsProvider.notifier).removeReward(reward.id);
-                              },
+                            title: Text(reward.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text(
+                              reward.description.isNotEmpty
+                                  ? '${reward.description} • ⭐ ${reward.costStars} estrellas'
+                                  : '⭐ ${reward.costStars} estrellas',
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (reward.timesRedeemed > 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.playfulGreen.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Canjeado: ${reward.timesRedeemed}x',
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.playfulGreen),
+                                    ),
+                                  ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined, color: AppColors.primaryBlue),
+                                  tooltip: 'Modificar premio',
+                                  onPressed: () => _showEditRewardDialog(reward),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  tooltip: 'Eliminar premio',
+                                  onPressed: () {
+                                    ref.read(rewardsProvider.notifier).removeReward(reward.id);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -1359,20 +1377,23 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Nombre del Niño / Explorador',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                  ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Nombre del Niño / Explorador',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                      ),
                   const SizedBox(height: 6),
                   const Text(
                     'La maestra usará este nombre para saludarlo y felicitarlo al jugar.',
@@ -1477,8 +1498,10 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
           ),
         ],
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildLevelCard({
     required String title,
@@ -1522,67 +1545,222 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   }
 
   Widget _buildSettingsTab() {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: SwitchListTile(
-            title: const Text('Voz de Maestra (Profe Sofía)', style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text('Instrucciones, correcciones y felicitaciones con voz didáctica'),
-            value: _voiceEnabled,
-            activeTrackColor: AppColors.playfulGreen,
-            onChanged: (val) async {
-              setState(() => _voiceEnabled = val);
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('parent_voice_enabled', val);
-              TeacherVoiceService.instance.isEnabled = val;
-            },
-          ),
+    final bgSettings = ref.watch(backgroundSettingsProvider);
+    final bgNotifier = ref.read(backgroundSettingsProvider.notifier);
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          children: [
+            // SECCIÓN 1: COLOR DEL FONDO DE LOS JUEGOS
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.palette_rounded, color: AppColors.primaryBlue, size: 24),
+                        SizedBox(width: 8),
+                        Text(
+                          'Color de Fondo de los Juegos',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Personaliza el color suave del fondo para toda la app:',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: BackgroundColorTheme.values.map((theme) {
+                        final isSel = bgSettings.colorTheme == theme;
+                        return InkWell(
+                          onTap: () => bgNotifier.setColorTheme(theme),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSel
+                                  ? AppColors.primaryBlue.withValues(alpha: 0.15)
+                                  : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSel ? AppColors.primaryBlue : Colors.grey.shade300,
+                                width: isSel ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    color: theme.previewColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.grey.shade400, width: 1),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  theme.name,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
+                                    color: isSel ? AppColors.primaryBlue : AppColors.textDark,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // SECCIÓN 2: DIBUJOS DECORATIVOS EN LUGARES FIJOS (SIN PISARSE)
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.auto_awesome_rounded, color: Colors.orange, size: 24),
+                        SizedBox(width: 8),
+                        Text(
+                          'Dibujos y Personajes en el Fondo',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Aparecen en lugares fijos sin solaparse ni tapar nada del juego:',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: BackgroundDrawingTheme.values.map((theme) {
+                        final isSel = bgSettings.drawingTheme == theme;
+                        return ChoiceChip(
+                          label: Text(theme.label),
+                          selected: isSel,
+                          selectedColor: Colors.orange.withValues(alpha: 0.25),
+                          onSelected: (val) {
+                            if (val) bgNotifier.setDrawingTheme(theme);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 14),
+                    ElevatedButton.icon(
+                      onPressed: () => BackgroundCustomizerDialog.show(context),
+                      icon: const Icon(Icons.tune_rounded),
+                      label: const Text('Personalizar Lugares Fijos (Evita Solapamientos)'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // SECCIÓN 3: CONFIGURACIÓN GENERAL
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              child: SwitchListTile(
+                title: const Text('Voz de Maestra (Profe Sofía)', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Instrucciones, correcciones y felicitaciones con voz didáctica'),
+                value: _voiceEnabled,
+                activeTrackColor: AppColors.playfulGreen,
+                onChanged: (val) async {
+                  setState(() => _voiceEnabled = val);
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('parent_voice_enabled', val);
+                  TeacherVoiceService.instance.isEnabled = val;
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              child: ListTile(
+                leading: const Icon(Icons.card_giftcard, color: AppColors.playfulGreen),
+                title: const Text('Restaurar Premios Sugeridos'),
+                subtitle: const Text('Restaura la lista de premios predeterminados'),
+                onTap: () {
+                  ref.read(rewardsProvider.notifier).restoreDefaults();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Premios predeterminados restaurados')),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              child: ListTile(
+                leading: const Icon(Icons.restore, color: AppColors.primaryBlue),
+                title: const Text('Restaurar Videos por Defecto'),
+                subtitle: const Text('Vuelve a cargar los videos seguros iniciales'),
+                onTap: () {
+                  ref.read(videoLibraryProvider.notifier).restoreDefaults();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Videos por defecto restaurados')),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              child: ListTile(
+                leading: const Icon(Icons.exit_to_app, color: Colors.red),
+                title: const Text('Cerrar Sesión Parental'),
+                subtitle: const Text('Volver a la pantalla infantil'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: ListTile(
-            leading: const Icon(Icons.card_giftcard, color: AppColors.playfulGreen),
-            title: const Text('Restaurar Premios Sugeridos'),
-            subtitle: const Text('Restaura la lista de premios predeterminados'),
-            onTap: () {
-              ref.read(rewardsProvider.notifier).restoreDefaults();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Premios predeterminados restaurados')),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: ListTile(
-            leading: const Icon(Icons.restore, color: AppColors.primaryBlue),
-            title: const Text('Restaurar Videos por Defecto'),
-            subtitle: const Text('Vuelve a cargar los videos seguros iniciales'),
-            onTap: () {
-              ref.read(videoLibraryProvider.notifier).restoreDefaults();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Videos por defecto restaurados')),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: ListTile(
-            leading: const Icon(Icons.exit_to_app, color: Colors.red),
-            title: const Text('Cerrar Sesión Parental'),
-            subtitle: const Text('Volver a la pantalla infantil'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

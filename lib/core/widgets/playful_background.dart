@@ -1,60 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kids_am/features/parent_zone/domain/models/background_settings.dart';
+import 'package:kids_am/features/parent_zone/presentation/providers/background_settings_provider.dart';
 
-class PlayfulBackground extends StatelessWidget {
+class PlayfulBackground extends ConsumerWidget {
   final Widget child;
 
   const PlayfulBackground({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(backgroundSettingsProvider);
+    final drawings = settings.getEffectiveDrawings();
+    final size = MediaQuery.sizeOf(context);
+
     return Stack(
       children: [
-        // Gradiente alegre y luminoso que no satura la vista
+        // Fondo con el color/degradado configurado por el padre
         Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFE9F5FF), // Celeste cielo suave
-                Color(0xFFFFF9EE), // Amarillo crema luminoso
-                Color(0xFFFBF1F8), // Toque pastel mágico
-              ],
+              colors: settings.colorTheme.colors,
             ),
           ),
         ),
 
-        // Elementos decorativos infantiles flotantes con opacidad suave
-        Positioned(
-          top: 30,
-          right: 25,
-          child: _DecorativeItem(icon: '⭐', size: 32, opacity: 0.12),
-        ),
-        Positioned(
-          top: 140,
-          left: 18,
-          child: _DecorativeItem(icon: '☁️', size: 40, opacity: 0.12),
-        ),
-        Positioned(
-          top: 260,
-          right: 20,
-          child: _DecorativeItem(icon: '✨', size: 28, opacity: 0.10),
-        ),
-        Positioned(
-          bottom: 220,
-          left: 15,
-          child: _DecorativeItem(icon: '🎈', size: 34, opacity: 0.11),
-        ),
-        Positioned(
-          bottom: 120,
-          right: 30,
-          child: _DecorativeItem(icon: '🚀', size: 36, opacity: 0.10),
-        ),
-        Positioned(
-          bottom: 30,
-          left: 35,
-          child: _DecorativeItem(icon: '🌟', size: 30, opacity: 0.12),
-        ),
+        // Dibujos decorativos en lugares fijos con prevención de solapamientos
+        if (drawings.containsKey(ScreenSlot.topLeft))
+          Positioned(
+            top: 28,
+            left: 20,
+            child: _DecorativeItem(
+              icon: drawings[ScreenSlot.topLeft]!,
+              size: 36,
+              opacity: 0.14,
+            ),
+          ),
+
+        if (drawings.containsKey(ScreenSlot.topRight))
+          Positioned(
+            top: 28,
+            right: 20,
+            child: _DecorativeItem(
+              icon: drawings[ScreenSlot.topRight]!,
+              size: 36,
+              opacity: 0.14,
+            ),
+          ),
+
+        if (drawings.containsKey(ScreenSlot.midLeft))
+          Positioned(
+            top: size.height * 0.38,
+            left: 16,
+            child: _DecorativeItem(
+              icon: drawings[ScreenSlot.midLeft]!,
+              size: 34,
+              opacity: 0.13,
+            ),
+          ),
+
+        if (drawings.containsKey(ScreenSlot.midRight))
+          Positioned(
+            top: size.height * 0.38,
+            right: 16,
+            child: _DecorativeItem(
+              icon: drawings[ScreenSlot.midRight]!,
+              size: 34,
+              opacity: 0.13,
+            ),
+          ),
+
+        if (drawings.containsKey(ScreenSlot.bottomLeft))
+          Positioned(
+            bottom: 28,
+            left: 20,
+            child: _DecorativeItem(
+              icon: drawings[ScreenSlot.bottomLeft]!,
+              size: 36,
+              opacity: 0.14,
+            ),
+          ),
+
+        if (drawings.containsKey(ScreenSlot.bottomRight))
+          Positioned(
+            bottom: 28,
+            right: 20,
+            child: _DecorativeItem(
+              icon: drawings[ScreenSlot.bottomRight]!,
+              size: 36,
+              opacity: 0.14,
+            ),
+          ),
 
         // Contenido interactivo en primer plano
         child,
@@ -76,11 +114,13 @@ class _DecorativeItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: opacity,
-      child: Text(
-        icon,
-        style: TextStyle(fontSize: size),
+    return IgnorePointer(
+      child: Opacity(
+        opacity: opacity,
+        child: Text(
+          icon,
+          style: TextStyle(fontSize: size),
+        ),
       ),
     );
   }
