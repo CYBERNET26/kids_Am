@@ -15,6 +15,7 @@ import 'package:kids_am/features/parent_zone/domain/models/background_settings.d
 import 'package:kids_am/features/parent_zone/presentation/providers/background_settings_provider.dart';
 import 'package:kids_am/features/parent_zone/presentation/widgets/background_customizer_dialog.dart';
 import 'package:kids_am/features/stories/presentation/providers/stories_provider.dart';
+import 'package:kids_am/features/updater/presentation/providers/update_provider.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -412,6 +413,8 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   String _selectedRewardIcon = '🎁';
 
   bool _voiceEnabled = true;
+  late final TextEditingController _githubTokenController;
+  bool _obscureToken = true;
 
   @override
   void initState() {
@@ -419,7 +422,28 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _tabController = TabController(length: 5, vsync: this);
     final profile = ref.read(childProfileProvider);
     _childNameController = TextEditingController(text: profile.name);
+    final initialToken = ref.read(updateProvider).githubToken;
+    _githubTokenController = TextEditingController(text: initialToken);
     _loadSettings();
+
+    // Comprobar actualización automáticamente al ingresar al Panel Parental
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkUpdateOnEnteringParentZone();
+    });
+  }
+
+  Future<void> _checkUpdateOnEnteringParentZone() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dismissedVersion = prefs.getString('dismissed_update_version');
+
+      if (!mounted) return;
+      ref.read(updateProvider.notifier).checkForUpdates(
+            isManual: false,
+            context: context,
+            dismissedVersion: dismissedVersion,
+          );
+    } catch (_) {}
   }
 
   Future<void> _loadSettings() async {
@@ -440,6 +464,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _rewardTitleController.dispose();
     _rewardStarsController.dispose();
     _rewardDescController.dispose();
+    _githubTokenController.dispose();
     super.dispose();
   }
 
@@ -1789,6 +1814,92 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                           ),
                         ],
                       ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // SECCIÓN: CONEXIÓN GITHUB (REPO PRIVADO)
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.lock_outline_rounded, color: AppColors.primaryBlue, size: 24),
+                        SizedBox(width: 8),
+                        Text(
+                          'Conexión GitHub (Repo Privado)',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Para que la app consulte las actualizaciones en tu repositorio privado de GitHub, ingresa tu Personal Access Token (PAT):',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _githubTokenController,
+                            obscureText: _obscureToken,
+                            decoration: InputDecoration(
+                              hintText: 'github_pat_... o ghp_...',
+                              hintStyle: const TextStyle(fontSize: 12),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureToken ? Icons.visibility_off : Icons.visibility,
+                                  size: 18,
+                                ),
+                                onPressed: () => setState(() => _obscureToken = !_obscureToken),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final token = _githubTokenController.text.trim();
+                            await ref.read(updateProvider.notifier).setGithubToken(token);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Token de GitHub guardado'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                              ref.read(updateProvider.notifier).checkForUpdates(
+                                    isManual: true,
+                                    context: context,
+                                  );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          ),
+                          child: const Text('Guardar'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

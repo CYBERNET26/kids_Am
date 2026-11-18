@@ -1,0 +1,60 @@
+name: Publicar Release y Notificar al Padre
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Crear Release en GitHub y Enviar Correo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Leer información de versión
+        id: ver
+        run: |
+          VERSION=$(jq -r '.version' version.json)
+          TITLE=$(jq -r '.title' version.json)
+          APK_NAME=$(jq -r '.apkFileName' version.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Crear GitHub Release oficial y adjuntar APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: ${{ steps.ver.outputs.title }}
+          body: |
+            ## 🚀 Actualización Kids Am ${{ steps.ver.outputs.tag }}
+
+            ### Novedades:
+            - Nuevo apartado «Rincón de Cuentos» (Lectura y Comprensión) con preguntas y estrellas.
+            - Videos educativos en pantalla completa horizontal inmersiva.
+            - Sistema de actualización automática integrado con el Panel Parental.
+
+            Abre la app Kids Am e ingresa al **Panel Parental** (ícono de candado) para instalarla automáticamente.
+          files: |
+            ${{ steps.ver.outputs.apk_name }}
+            KidsAm-installer-v1.0.1.apk
+            version.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enviar correo de notificación al padre
+        run: |
+          echo "Enviando notificación al padre..."
+          python3 .github/scripts/send_notification.py "${{ steps.ver.outputs.tag }}" "${{ steps.ver.outputs.title }}"
+        env:
+          PARENT_EMAIL: "asm.electronica@gmail.com"

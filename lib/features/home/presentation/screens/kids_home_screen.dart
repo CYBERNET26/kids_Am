@@ -35,12 +35,12 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
       TeacherVoiceService.instance.speak(greeting);
     }
 
-    // Comprobación de actualizaciones en segundo plano desde el repositorio privado de GitHub
+    // Comprobación de actualizaciones en segundo plano para notificar al padre por correo
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         final updateState = ref.read(updateProvider);
         if (updateState.autoCheckOnStart) {
-          ref.read(updateProvider.notifier).checkForUpdates(context: context);
+          ref.read(updateProvider.notifier).checkForUpdates(context: null);
         }
       }
     });

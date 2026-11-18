@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kids_am/core/constants/update_config.dart';
 import 'package:kids_am/features/updater/data/services/app_update_service.dart';
+import 'package:kids_am/features/updater/data/services/parent_notification_service.dart';
 import 'package:kids_am/features/updater/domain/models/app_update_info.dart';
 import 'package:kids_am/features/updater/presentation/widgets/update_dialog.dart';
 
@@ -102,6 +103,7 @@ class UpdateNotifier extends Notifier<UpdateState> {
   Future<void> checkForUpdates({
     bool isManual = false,
     BuildContext? context,
+    String? dismissedVersion,
   }) async {
     state = state.copyWith(status: UpdateStatus.checking, errorMessage: null);
 
@@ -116,9 +118,15 @@ class UpdateNotifier extends Notifier<UpdateState> {
           lastChecked: now,
         );
 
-        // Si se pasó un context, mostramos el cartel de actualización inmediatamente
+        // Notificar por correo al padre si aún no fue notificado para esta versión
+        ParentNotificationService.notifyParentAboutUpdate(info);
+
+        // Si se pasó un context y no fue cancelado por el padre, mostramos la ventana flotante
         if (context != null && context.mounted) {
-          UpdateDialog.show(context, info);
+          final isDismissed = dismissedVersion != null && dismissedVersion == info.version;
+          if (!isDismissed || isManual) {
+            UpdateDialog.show(context, info);
+          }
         }
       } else {
         state = state.copyWith(
