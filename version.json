@@ -1,9 +1,9 @@
 {
-  "version": "1.0.4",
-  "versionCode": 5,
-  "title": "Kids Am v1.0.4 - Actualizaciones Automáticas Optimizadas y Figuras Montessori",
+  "version": "1.0.5",
+  "versionCode": 6,
+  "title": "Kids Am v1.0.5 - Tutor Inteligente Híbrido Offline-First y Modo Clásico",
   "releaseDate": "2026-11-18",
-  "changelog": "### 🚀 Novedades y Agregados:\n• Sistema de Actualizaciones Automáticas Robusto: Detección instantánea y directa de nuevas versiones sin bloqueos de rate limit ni requerimientos de tokens.\n• Notificación Visual Inmediata: Ahora se muestra un aviso brillante en la pantalla de inicio y una ventana emergente en el Panel Parental cada vez que una actualización está lista.\n• Limpieza de Versiones Anteriores: Las versiones previas se archivaron de forma ordenada, dejando únicamente el instalador oficial más reciente.\n• Rompecabezas de Figuras Reales Troqueladas (Juegos Montessori): Piezas troqueladas con silueta real y silencio pedagógico en aciertos.\n• Lectura de Cuentos con la Seño Sofía en voz alta con controles interactivos.",
-  "apkFileName": "KidsAm-installer-v1.0.4.apk",
-  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.4.apk"
+  "changelog": "### 🚀 Novedades y Agregados:\n• Arquitectura de Tutor Híbrido: Soporte de dos modos: Modo Clásico (100% offline sin IA) y Modo Tutor Inteligente (con API Key personal del padre para explicaciones adaptadas a niños de 6 años).\n• Aislamiento Total de Datos y Progreso: El progreso, estrellas y niveles son 100% agnósticos a la IA y nunca se pierden aunque se desactive la IA o se pierda internet.\n• Capa de Audio Híbrida con Fallback Instantáneo: Si la conexión a la IA demora más de 2.5s o falla la red, el sistema recurre al instante a las explicaciones locales sin interrumpir al niño.\n• Panel Parental con Switch y Tutorial: Diálogo instructivo para obtener y configurar la API Key de Gemini de forma segura.\n• Integración completa en Matemáticas, Rompecabezas Montessori, Ajedrez y Cuentos.",
+  "apkFileName": "KidsAm-installer-v1.0.5.apk",
+  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.5.apk"
 }

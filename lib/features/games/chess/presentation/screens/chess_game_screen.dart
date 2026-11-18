@@ -9,6 +9,8 @@ import 'package:kids_am/core/widgets/playful_background.dart';
 import 'package:kids_am/core/widgets/teacher_bubble_widget.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/games/domain/models/game_level.dart';
+import 'package:kids_am/features/tutor/domain/models/tutor_context.dart';
+import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
 
 enum ChessPieceType { king, queen, rook, bishop, knight, pawn }
 
@@ -457,7 +459,22 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
               _teacherSpeech =
                   'Esa jugada es legal, pero no da Jaque Mate. ¡Pista: ${_currentMatePuzzle!.hint}!';
             });
-            TeacherVoiceService.instance.speak(_teacherSpeech);
+
+            final profile = ref.read(childProfileProvider);
+            final tutorState = ref.read(tutorProvider);
+            tutorState.coordinator.speakFeedback(
+              TutorContext(
+                childName: profile.name,
+                childAge: 6,
+                eventType: TutorEventType.chessIncorrect,
+                gameName: 'Ajedrez',
+                topicOrOperation: _currentMatePuzzle!.title,
+                childMistake: 'Mantuvo al rey con escape',
+                pedagogicalHint: _currentMatePuzzle!.hint,
+              ),
+            ).then((fb) {
+              if (mounted) setState(() => _teacherSpeech = fb.speechText);
+            });
           }
         } else {
           // Modo entrenamiento 8x8 (alcanzar la gema)

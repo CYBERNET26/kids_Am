@@ -12,6 +12,8 @@ import 'package:kids_am/features/games/domain/models/game_level.dart';
 import 'package:kids_am/features/parent_zone/domain/models/custom_exercise.dart';
 import 'package:kids_am/features/parent_zone/presentation/providers/custom_exercises_provider.dart';
 import 'package:kids_am/features/games/visual_math/presentation/widgets/math_preamble_dialog.dart';
+import 'package:kids_am/features/tutor/domain/models/tutor_context.dart';
+import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
 
 class VisualMathScreen extends ConsumerStatefulWidget {
   const VisualMathScreen({super.key});
@@ -386,26 +388,47 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
         _generateExercise();
       }
     } else {
+      String hint = '';
+      switch (_currentOperation) {
+        case MathOperation.addition:
+          hint = 'Cuenta primero los de arriba y sigue sumando los de abajo.';
+          break;
+        case MathOperation.subtraction:
+          hint = 'Quita mentalmente los $_secondGroup objetos y cuenta cuántos te quedan.';
+          break;
+        case MathOperation.multiplication:
+          hint = 'Suma cada uno de los grupos iguales.';
+          break;
+        case MathOperation.division:
+          hint = 'Reparte en partes iguales para saber cuánto le toca a cada uno.';
+          break;
+      }
+
       setState(() {
         _selectedAnswer = answer;
         _isCorrect = false;
         _isTip = true;
-        switch (_currentOperation) {
-          case MathOperation.addition:
-            _teacherSpeech = '¡Casi! Cuenta primero los de arriba y sigue sumando los de abajo. ¡Intenta de nuevo!';
-            break;
-          case MathOperation.subtraction:
-            _teacherSpeech = '¡Ánimo! Quita mentalmente los $_secondGroup objetos y cuenta cuántos te quedan.';
-            break;
-          case MathOperation.multiplication:
-            _teacherSpeech = '¡Cerca! Cuenta cuántos objetos hay sumando cada uno de los grupos iguales.';
-            break;
-          case MathOperation.division:
-            _teacherSpeech = '¡Inténtalo otra vez! Cuenta cuántos caramelos tiene un solo amigo para saber la parte igual.';
-            break;
-        }
       });
-      TeacherVoiceService.instance.speak(_teacherSpeech);
+
+      final profile = ref.read(childProfileProvider);
+      final tutorState = ref.read(tutorProvider);
+      final feedback = await tutorState.coordinator.speakFeedback(
+        TutorContext(
+          childName: profile.name,
+          childAge: 6,
+          eventType: TutorEventType.mathIncorrect,
+          gameName: 'Mundo Matemático',
+          topicOrOperation: '$_firstGroup ${_currentOperation.symbol} $_secondGroup',
+          childMistake: 'Eligió $answer en vez de $_correctResult',
+          pedagogicalHint: hint,
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _teacherSpeech = feedback.speechText;
+        });
+      }
     }
   }
 

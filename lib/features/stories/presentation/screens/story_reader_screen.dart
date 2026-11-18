@@ -7,6 +7,8 @@ import 'package:kids_am/core/widgets/playful_background.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/stories/domain/models/story_item.dart';
 import 'package:kids_am/features/stories/presentation/providers/stories_provider.dart';
+import 'package:kids_am/features/tutor/domain/models/tutor_context.dart';
+import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
 
 class StoryReaderScreen extends ConsumerStatefulWidget {
   final StoryItem story;
@@ -113,14 +115,21 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
       }
     });
 
-    if (isCorrect) {
-      TeacherVoiceService.instance.speak(
-        '¡Excelente! ¡Respuesta correcta! Ganaste $starsPerQuestion estrella${starsPerQuestion > 1 ? 's' : ''}.',
-      );
-    } else {
-      final correctText = question.options[question.correctIndex];
-      TeacherVoiceService.instance.speak('¡Casi! La respuesta correcta era: $correctText.');
-    }
+    final tutor = ref.read(tutorProvider);
+    final profile = ref.read(childProfileProvider);
+    final selectedText = question.options[index];
+
+    tutor.coordinator.speakFeedback(
+      TutorContext(
+        childName: profile.name,
+        childAge: profile.age,
+        eventType: isCorrect ? TutorEventType.storyCorrect : TutorEventType.storyIncorrect,
+        gameName: 'Cuentos Mágicos',
+        topicOrOperation: widget.story.title,
+        childMistake: isCorrect ? null : 'El niño respondió: "$selectedText"',
+        pedagogicalHint: question.explanation,
+      ),
+    );
   }
 
   void _nextQuestion() {

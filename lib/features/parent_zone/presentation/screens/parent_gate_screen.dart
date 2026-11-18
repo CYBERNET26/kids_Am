@@ -16,6 +16,8 @@ import 'package:kids_am/features/parent_zone/presentation/providers/background_s
 import 'package:kids_am/features/parent_zone/presentation/widgets/background_customizer_dialog.dart';
 import 'package:kids_am/features/stories/presentation/providers/stories_provider.dart';
 import 'package:kids_am/features/updater/presentation/providers/update_provider.dart';
+import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
+import 'package:kids_am/features/tutor/presentation/widgets/ai_key_help_dialog.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -413,6 +415,8 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   String _selectedRewardIcon = '🎁';
 
   bool _voiceEnabled = true;
+  late TextEditingController _apiKeyController;
+  bool _obscureApiKey = true;
 
   @override
   void initState() {
@@ -420,6 +424,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _tabController = TabController(length: 5, vsync: this);
     final profile = ref.read(childProfileProvider);
     _childNameController = TextEditingController(text: profile.name);
+    _apiKeyController = TextEditingController(text: ref.read(tutorProvider).apiKey);
     _loadSettings();
 
     // Comprobar actualización automáticamente al ingresar al Panel Parental
@@ -460,7 +465,38 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _rewardTitleController.dispose();
     _rewardStarsController.dispose();
     _rewardDescController.dispose();
+    _apiKeyController.dispose();
     super.dispose();
+  }
+
+  Future<void> _testApiKey() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final key = _apiKeyController.text.trim();
+    if (key.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Escribe o pega tu clave de Gemini.')),
+      );
+      return;
+    }
+    final ok = await ref.read(tutorProvider.notifier).testApiKey(key);
+    if (!mounted) return;
+    final msg = ref.read(tutorProvider).validationMessage;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(msg ?? (ok ? '¡Clave validada con éxito!' : 'Error de validación')),
+        backgroundColor: ok ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  Future<void> _clearApiKey() async {
+    final messenger = ScaffoldMessenger.of(context);
+    _apiKeyController.clear();
+    await ref.read(tutorProvider.notifier).saveApiKey('');
+    if (!mounted) return;
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Clave eliminada. Modo Clásico activo.')),
+    );
   }
 
   void _showAddRewardDialog() {
@@ -1813,6 +1849,152 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                   ],
                 ),
               ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // SECCIÓN: TUTOR INTELIGENTE (MODO CLÁSICO VS MODO IA)
+            Builder(
+              builder: (context) {
+                final tutorSettings = ref.watch(tutorProvider);
+                final tutorNotifier = ref.read(tutorProvider.notifier);
+
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Text('🤖', style: TextStyle(fontSize: 24)),
+                            ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tutor Inteligente de la Seño Sofía',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Modo Clásico (Offline) o Modo IA con tu propia clave',
+                                    style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            tutorSettings.isAiEnabled
+                                ? 'Modo Tutor Inteligente (IA Activada) ✨'
+                                : 'Modo Clásico (100% Offline / Sin IA) 🛡️',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            tutorSettings.isAiEnabled
+                                ? 'La Seño Sofía genera metáforas variadas usando tu clave API de Gemini. Si falla la red, recurre automáticamente al Modo Clásico.'
+                                : 'Funciona sin internet ni claves. La app usa un banco fijo de recursos locales pregrabados.',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          value: tutorSettings.isAiEnabled,
+                          activeTrackColor: Colors.purple.shade400,
+                          onChanged: (val) {
+                            tutorNotifier.toggleAiEnabled(val);
+                            if (val && tutorSettings.apiKey.isEmpty) {
+                              AiKeyHelpDialog.show(context);
+                            }
+                          },
+                        ),
+                        if (tutorSettings.isAiEnabled) ...[
+                          const Divider(),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Clave API de Gemini del Padre:',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => AiKeyHelpDialog.show(context),
+                                icon: const Icon(Icons.help_outline_rounded, size: 16, color: Colors.purple),
+                                label: const Text(
+                                  '¿Cómo obtenerla gratis?',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.purple),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: _apiKeyController,
+                            obscureText: _obscureApiKey,
+                            decoration: InputDecoration(
+                              hintText: 'Pega tu clave aquí (empieza con AIzaSy...)',
+                              prefixIcon: const Icon(Icons.key_rounded, color: Colors.purple),
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscureApiKey ? Icons.visibility_off : Icons.visibility),
+                                onPressed: () => setState(() => _obscureApiKey = !_obscureApiKey),
+                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: tutorSettings.isValidatingKey ? null : _testApiKey,
+                                  icon: tutorSettings.isValidatingKey
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                        )
+                                      : const Icon(Icons.check_circle_outline_rounded, size: 18),
+                                  label: Text(tutorSettings.isValidatingKey ? 'Verificando...' : 'Probar y Guardar Clave'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.purple.shade700,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                              if (tutorSettings.apiKey.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  tooltip: 'Borrar clave (Volver a Modo Clásico)',
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: _clearApiKey,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 14),

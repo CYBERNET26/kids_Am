@@ -9,6 +9,8 @@ import 'package:kids_am/core/widgets/playful_background.dart';
 import 'package:kids_am/core/widgets/teacher_bubble_widget.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/games/domain/models/game_level.dart';
+import 'package:kids_am/features/tutor/domain/models/tutor_context.dart';
+import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
 
 enum ShapeType {
   circle,
@@ -650,7 +652,26 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                   _teacherSpeech =
                                       '¡Esa pieza es una figura de ${draggedShape.name} ${draggedShape.symbol}! No encaja en el hueco de ${requiredShape.name} ${requiredShape.symbol}. ¡Busca la forma que coincida!';
                                 });
-                                TeacherVoiceService.instance.speak(_teacherSpeech);
+
+                                final profile = ref.read(childProfileProvider);
+                                final tutorState = ref.read(tutorProvider);
+                                tutorState.coordinator.speakFeedback(
+                                  TutorContext(
+                                    childName: profile.name,
+                                    childAge: 6,
+                                    eventType: TutorEventType.puzzleIncorrect,
+                                    gameName: 'Rompecabezas de Encastre',
+                                    topicOrOperation: 'Figura ${requiredShape.name}',
+                                    childMistake: 'Intentó colocar figura de ${draggedShape.name} en el hueco de ${requiredShape.name}',
+                                    pedagogicalHint: 'Busca el hueco con la silueta de ${draggedShape.name}',
+                                  ),
+                                ).then((fb) {
+                                  if (mounted) {
+                                    setState(() {
+                                      _teacherSpeech = fb.speechText;
+                                    });
+                                  }
+                                });
                               }
                             },
                             builder: (context, candidateData, rejectedData) {
