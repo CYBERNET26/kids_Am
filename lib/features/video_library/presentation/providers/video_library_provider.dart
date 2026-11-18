@@ -1,54 +1,16 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kids_am/core/constants/default_videos.dart';
 import 'package:kids_am/features/video_library/domain/models/video_item.dart';
 
 class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
-  static const _storageKey = 'saved_safe_videos';
-
-  static final List<VideoItem> _defaultVideos = [
-    const VideoItem(
-      id: 'vid_yt_1',
-      title: 'Aprende los Números del 1 al 10 🎵',
-      description: 'Canción didáctica y alegre para contar con animalitos',
-      urlOrAssetPath: 'https://www.youtube.com/watch?v=pSqkWk_Q_i4',
-      sourceType: VideoSourceType.youtube,
-      category: 'Matemáticas',
-      rewardStars: 3,
-    ),
-    const VideoItem(
-      id: 'vid_yt_2',
-      title: 'Las Figuras Geométricas Divertidas 🔺🔵',
-      description: 'Círculo, cuadrado, triángulo y rectángulo para niños',
-      urlOrAssetPath: 'https://www.youtube.com/watch?v=65wZuz-8u-k',
-      sourceType: VideoSourceType.youtube,
-      category: 'Geometría',
-      rewardStars: 3,
-    ),
-    const VideoItem(
-      id: 'vid_yt_3',
-      title: 'Ajedrez para Niños: ¿Cómo se mueve la Torre y el Caballo? 🏰',
-      description: 'Cuento interactivo para aprender las piezas de ajedrez',
-      urlOrAssetPath: 'https://www.youtube.com/watch?v=kYJv8Z1kZ50',
-      sourceType: VideoSourceType.youtube,
-      category: 'Ajedrez',
-      rewardStars: 4,
-    ),
-    const VideoItem(
-      id: 'vid_direct_1',
-      title: 'La Abejita Laboriosa 🐝',
-      description: 'Video corto educativo de la naturaleza',
-      urlOrAssetPath: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
-      sourceType: VideoSourceType.networkUrl,
-      category: 'Ciencias',
-      rewardStars: 2,
-    ),
-  ];
+  static const _storageKey = 'saved_safe_videos_v2';
 
   @override
   List<VideoItem> build() {
     _loadFromStorage();
-    return _defaultVideos;
+    return defaultEducationalVideos;
   }
 
   Future<void> _loadFromStorage() async {
@@ -57,12 +19,16 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
       final jsonString = prefs.getString(_storageKey);
       if (jsonString != null && jsonString.isNotEmpty) {
         final List decoded = jsonDecode(jsonString);
-        final loaded = decoded.map((e) => VideoItem.fromMap(Map<String, dynamic>.from(e))).toList();
+        final loaded = decoded
+            .map((e) => VideoItem.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
         if (loaded.isNotEmpty) {
           state = loaded;
+          return;
         }
       }
     } catch (_) {}
+    state = defaultEducationalVideos;
   }
 
   Future<void> _saveToStorage(List<VideoItem> items) async {
@@ -102,8 +68,8 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
   }
 
   void restoreDefaults() {
-    state = _defaultVideos;
-    _saveToStorage(_defaultVideos);
+    state = defaultEducationalVideos;
+    _saveToStorage(defaultEducationalVideos);
   }
 }
 

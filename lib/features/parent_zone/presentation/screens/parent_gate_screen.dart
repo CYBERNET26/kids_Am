@@ -885,26 +885,60 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
         constraints: const BoxConstraints(maxWidth: 620),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Videos Habilitados (${videos.length})',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _showAddVideoDialog,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Cargar Video'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            Card(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
+                      radius: 22,
+                      child: const Icon(Icons.video_library_rounded, color: AppColors.primaryBlue),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Videos Educativos',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                          ),
+                          Text(
+                            '${videos.length} videos habilitados',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryBlue),
+                      tooltip: 'Recargar videos por defecto (desde default_videos.dart)',
+                      onPressed: () {
+                        ref.read(videoLibraryProvider.notifier).restoreDefaults();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('¡Videos por defecto recargados desde default_videos.dart!')),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                    ElevatedButton.icon(
+                      onPressed: _showAddVideoDialog,
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text('Cargar Video', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -1147,26 +1181,49 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
         constraints: const BoxConstraints(maxWidth: 620),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Ejercicios Creados (${exercises.length})',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () => _showCustomExerciseDialog(),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Crear Ejercicio'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            Card(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.purple.withValues(alpha: 0.12),
+                      radius: 22,
+                      child: const Icon(Icons.calculate_rounded, color: Colors.purple),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Ejercicios de Padres',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                          ),
+                          Text(
+                            '${exercises.length} desafíos personalizados',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => _showCustomExerciseDialog(),
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text('Crear Ejercicio', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -1288,26 +1345,49 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
         constraints: const BoxConstraints(maxWidth: 620),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Premios y Recompensas ⭐',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _showAddRewardDialog,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Crear Premio'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.playfulGreen,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            Card(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.playfulGreen.withValues(alpha: 0.15),
+                      radius: 22,
+                      child: const Icon(Icons.card_giftcard_rounded, color: AppColors.playfulGreen),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Premios y Recompensas',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                          ),
+                          Text(
+                            '${rewards.length} premios para canjear con estrellas ⭐',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _showAddRewardDialog,
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text('Crear Premio', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.playfulGreen,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
