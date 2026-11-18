@@ -20,7 +20,7 @@ class VisualMathScreen extends ConsumerStatefulWidget {
 class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
   static const int totalMathExercises = 100;
   late ConfettiController _confettiController;
-  int _exerciseNumber = 1; // 1 a 100
+  int _exerciseNumber = 1;
   bool _hasGreetedThisVisit = false;
 
   late int _firstGroup;
@@ -34,23 +34,23 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
   bool _isTip = false;
   bool _isAutoAdvancing = false;
 
-  final List<String> _emojis = ['🍎', '⭐️', '🚗', '🐱', '🚀', '🍓', '🎈', '🐶', '⚽️', '🍦'];
+  final List<String> _emojis = ['🍎', '⭐️', '🚗', '🐱', '🚀', '🍓', '🎈', '🐶', '⚽️', '🍦', '🐼', '🍇'];
   late String _currentEmoji;
 
   final List<String> _variedPromptsAddition = [
-    '¡Siguiente desafío! ¿Cuántos objetos hay si los sumamos todos?',
-    '¡Mira esta nueva cuenta! Suma los de arriba con los de abajo.',
-    '¡A contar con atención! ¿Cuál es el resultado de esta suma?',
-    '¡Excelente ritmo! ¿Cuántos objetos tenemos en total?',
-    '¡Vamos con otra divertida! Cuenta los objetos y toca la respuesta.',
+    '¡Siguiente suma! Cuenta los objetos de arriba y de abajo para hallar el total.',
+    '¡A sumar! ¿Cuántos objetos tenemos si los juntamos todos?',
+    '¡Mira esta nueva cuenta! Sumemos con atención.',
+    '¡Excelente ritmo! ¿Cuál es el resultado de esta suma?',
+    '¡Vamos con otra divertida! Cuenta los objetos y toca la respuesta correcta.',
   ];
 
   final List<String> _variedPromptsSubtraction = [
-    '¡Aventura de restar! Teníamos estos objetos y quitamos algunos. ¿Cuántos quedan?',
-    '¡Siguiente ejercicio! Haz la resta y encuentra el resultado correcto.',
-    '¡Mira bien! Si quitamos los de abajo, ¿cuántos nos quedan?',
-    '¡A calcular! ¿Qué número queda después de restar?',
-    '¡Vamos muy bien! Cuenta los que sobran y toca el botón.',
+    '¡Ahora toca una resta! Teníamos estos objetos y quitamos algunos. ¿Cuántos quedan?',
+    '¡Aventura de restar! Haz la resta y encuentra el resultado correcto.',
+    '¡Mira bien! Si quitamos los de abajo, ¿cuántos nos sobran?',
+    '¡A calcular la resta! ¿Qué número queda?',
+    '¡Vamos muy bien! Cuenta los que quedan sueltos y toca el botón.',
   ];
 
   @override
@@ -80,58 +80,42 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     _isTip = false;
     _isAutoAdvancing = false;
 
-    // Progresión estructurada a lo largo de los 100 ejercicios
-    // 1-10: Sumas 1 a 4 (Nivel 1)
-    // 11-20: Sumas 1 a 6 (Nivel 2)
-    // 21-30: Sumas 1 a 8 (Nivel 3)
-    // 31-40: Restas 1 a 6 (Nivel 4)
-    // 41-50: Restas 1 a 10 (Nivel 5)
-    // 51-60: Combinadas hasta 10 (Nivel 6)
-    // 61-70: Sumas hasta 14 (Nivel 7)
-    // 71-80: Restas hasta 14 (Nivel 8)
-    // 81-90: Desafíos hasta 18 (Nivel 9)
-    // 91-100: Retos de campeón hasta 22 (Nivel 10)
+    // MEZCLADO CONSTANTE: alterna entre suma y resta en cada ejercicio consecutivo
+    _isAddition = (_exerciseNumber % 2 != 0);
 
-    if (_exerciseNumber <= 30) {
-      _isAddition = true;
-      final maxG = _exerciseNumber <= 10 ? 3 : (_exerciseNumber <= 20 ? 5 : 6);
-      _firstGroup = random.nextInt(maxG) + 1;
-      _secondGroup = random.nextInt(maxG) + 1;
+    // Dificultad escalada según el mathLevel actual del niño
+    // Nivel 1: números del 1 al 5
+    // Nivel 2: números del 1 al 10
+    // Nivel 3: números hasta 15
+    // Nivel 4+: números hasta 20+
+    final level = profile.mathLevel;
+    final maxNumber = (level * 5).clamp(5, 25);
+
+    if (_isAddition) {
+      final halfMax = max(2, maxNumber ~/ 2);
+      _firstGroup = random.nextInt(halfMax) + 1;
+      _secondGroup = random.nextInt(halfMax) + 1;
       _correctResult = _firstGroup + _secondGroup;
-    } else if (_exerciseNumber <= 50) {
-      _isAddition = false;
-      final maxG = _exerciseNumber <= 40 ? 6 : 9;
-      _firstGroup = random.nextInt(maxG) + 2;
+    } else {
+      _firstGroup = random.nextInt(maxNumber - 2) + 2;
       _secondGroup = random.nextInt(_firstGroup - 1) + 1;
       _correctResult = _firstGroup - _secondGroup;
-    } else {
-      _isAddition = random.nextBool();
-      final maxG = _exerciseNumber <= 70 ? 7 : (_exerciseNumber <= 85 ? 9 : 11);
-      if (_isAddition) {
-        _firstGroup = random.nextInt(maxG) + 1;
-        _secondGroup = random.nextInt(maxG) + 1;
-        _correctResult = _firstGroup + _secondGroup;
-      } else {
-        _firstGroup = random.nextInt(maxG) + 3;
-        _secondGroup = random.nextInt(_firstGroup - 1) + 1;
-        _correctResult = _firstGroup - _secondGroup;
-      }
     }
 
     final Set<int> optionSet = {_correctResult};
     while (optionSet.length < 3) {
       final offset = random.nextBool() ? 1 : -1;
-      final distractor = (_correctResult + offset * (random.nextInt(3) + 1)).clamp(0, 30);
+      final distractor = (_correctResult + offset * (random.nextInt(3) + 1)).clamp(0, 50);
       optionSet.add(distractor);
     }
     _options = optionSet.toList()..shuffle();
 
-    // Mensaje de la maestra: Solo saluda con "Hola [Nombre]" en el primer ejercicio de la visita
+    // Solo saluda por única vez al entrar al juego en esta visita
     if (!_hasGreetedThisVisit) {
       _hasGreetedThisVisit = true;
-      _teacherSpeech = '¡Hola ${profile.name}! Bienvenido a Mundo Matemático. Empecemos con el ejercicio número $_exerciseNumber.';
+      _teacherSpeech = '¡Hola ${profile.name}! Bienvenido a Mundo Matemático Nivel $level. Ejercicio $_exerciseNumber de $totalMathExercises.';
     } else {
-      // Mensajes variados sin repetir "Hola"
+      // Consignas variadas y mezcladas
       if (_isAddition) {
         _teacherSpeech = _variedPromptsAddition[random.nextInt(_variedPromptsAddition.length)];
       } else {
@@ -147,23 +131,37 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     if (_isCorrect == true || _isAutoAdvancing) return;
 
     if (answer == _correctResult) {
+      final profile = ref.read(childProfileProvider);
+      final isFinalOfLevel = _exerciseNumber >= totalMathExercises;
+
       setState(() {
         _selectedAnswer = answer;
         _isCorrect = true;
         _isTip = false;
         _isAutoAdvancing = true;
         _confettiController.play();
-        _teacherSpeech = '¡Maravilloso! $_firstGroup ${_isAddition ? "más" : "menos"} $_secondGroup es igual a $_correctResult. ¡Excelente respuesta!';
+
+        if (isFinalOfLevel) {
+          _teacherSpeech = '¡Increíble logro ${profile.name}! ¡Completaste los 100 ejercicios del Nivel ${profile.mathLevel}! ¡Subes al Nivel ${profile.mathLevel + 1} con nuevos desafíos!';
+        } else {
+          _teacherSpeech = '¡Maravilloso! $_firstGroup ${_isAddition ? "más" : "menos"} $_secondGroup es igual a $_correctResult. ¡Excelente!';
+        }
       });
 
       ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.visualMath);
 
-      // Guardar progreso al siguiente ejercicio
-      final nextEx = (_exerciseNumber < totalMathExercises) ? _exerciseNumber + 1 : 1;
+      int nextEx;
+      if (isFinalOfLevel) {
+        // Pasa al siguiente nivel y reinicia los 100 ejercicios
+        ref.read(childProfileProvider.notifier).advanceLevel(GameType.visualMath);
+        nextEx = 1;
+      } else {
+        nextEx = _exerciseNumber + 1;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('math_exercise_index', nextEx);
 
-      // Esperar a que la maestra termine de hablar
       await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
       await Future.delayed(const Duration(milliseconds: 1000));
 
@@ -179,9 +177,9 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
         _isCorrect = false;
         _isTip = true;
         if (_isAddition) {
-          _teacherSpeech = '¡Casi lo logras! Mira con cuidado: contemos primero los $_firstGroup de arriba y luego agregamos los $_secondGroup de abajo. ¡Intenta otra vez!';
+          _teacherSpeech = '¡Casi lo logras! Cuenta primero los $_firstGroup de arriba y sigue sumando los $_secondGroup de abajo. ¡Intenta de nuevo!';
         } else {
-          _teacherSpeech = '¡Ánimo! Cuenta solo los objetos que quedaron sin tachar. ¡Tú puedes!';
+          _teacherSpeech = '¡Ánimo! Quita mentalmente los $_secondGroup objetos y cuenta cuántos te quedan.';
         }
       });
       TeacherVoiceService.instance.speak(_teacherSpeech);
@@ -198,11 +196,10 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(childProfileProvider);
-    final calculatedLevel = ((_exerciseNumber - 1) ~/ 10) + 1;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mundo Matemático (Ej. $_exerciseNumber de $totalMathExercises)'),
+        title: Text('Mundo Matemático (Nivel ${profile.mathLevel})'),
         backgroundColor: const Color(0xFFFF9233),
         foregroundColor: Colors.white,
       ),
@@ -246,7 +243,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                             ],
                           ),
                           child: Text(
-                            'Nivel $calculatedLevel • Ejercicio $_exerciseNumber/100 🚀',
+                            'Nivel ${profile.mathLevel} • Ejercicio $_exerciseNumber/100 🚀',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -430,7 +427,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                         Icon(Icons.check_circle, color: AppColors.playfulGreen, size: 24),
                         SizedBox(width: 8),
                         Text(
-                          '¡Excelente! Avanzando al siguiente ejercicio...',
+                          '¡Excelente! Avanzando...',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,

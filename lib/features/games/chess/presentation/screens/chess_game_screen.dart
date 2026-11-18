@@ -10,7 +10,7 @@ import 'package:kids_am/core/widgets/teacher_bubble_widget.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/games/domain/models/game_level.dart';
 
-enum ChessPieceType { rook, bishop, knight, queen }
+enum ChessPieceType { knight, rook, bishop, queen }
 
 class ChessGameScreen extends ConsumerStatefulWidget {
   const ChessGameScreen({super.key});
@@ -24,7 +24,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   static const int totalChessMissions = 100;
   late ConfettiController _confettiController;
 
-  int _missionNumber = 1; // 1 a 100
+  int _missionNumber = 1;
   bool _hasGreetedThisVisit = false;
 
   int _pieceRow = 0;
@@ -39,9 +39,9 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   bool _isTip = false;
 
   final List<String> _variedPrompts = [
-    '¡Siguiente misión táctica! Busca el mejor camino hacia la gema.',
-    '¡Nuevo reto en el tablero! ¿Qué casilla te acerca al objetivo?',
-    '¡A mover las piezas con estrategia! Llega a la gema dorada.',
+    '¡Siguiente misión táctica! Busca el mejor camino hacia la gema dorada.',
+    '¡Nuevo reto en el tablero! ¿Qué casilla te acerca a la gema?',
+    '¡A mover las piezas con estrategia! Llega a la gema.',
     '¡Excelente ritmo! Encuentra la jugada correcta para ganar.',
     '¡Concentración! Mira las casillas verdes y planea tu avance.',
   ];
@@ -71,54 +71,62 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     _isAutoAdvancing = false;
     _isTip = false;
 
-    // Configuración determinista y rica de 100 misiones
-    // 1-25: Torre
-    // 26-50: Alfil
-    // 51-75: Caballo
-    // 76-100: Reina
-    final phase = (_missionNumber - 1) % 25;
+    // MEZCLADO CONSTANTE: Cada misión alterna entre Caballo, Torre, Alfil y Reina
+    _currentPieceType = ChessPieceType.values[(_missionNumber - 1) % ChessPieceType.values.length];
 
-    if (_missionNumber <= 25) {
-      _currentPieceType = ChessPieceType.rook;
-      _pieceRow = (phase % 4);
-      _pieceCol = 0;
-      _targetRow = (_pieceRow + (phase % 2 == 0 ? 0 : 2)) % 4;
-      _targetCol = 3;
-      if (phase >= 8) _obstacles.add('$_pieceRow,2');
-      if (phase >= 16) _obstacles.add('${(_pieceRow + 1) % 4},1');
-    } else if (_missionNumber <= 50) {
-      _currentPieceType = ChessPieceType.bishop;
-      _pieceRow = phase % 2 == 0 ? 0 : 1;
-      _pieceCol = phase % 2 == 0 ? 0 : 1;
-      _targetRow = phase % 2 == 0 ? 3 : 2;
-      _targetCol = phase % 2 == 0 ? 3 : 2;
-      if (phase >= 10) _obstacles.add('1,2');
-      if (phase >= 18) _obstacles.add('2,1');
-    } else if (_missionNumber <= 75) {
-      _currentPieceType = ChessPieceType.knight;
-      _pieceRow = phase % 3;
-      _pieceCol = 0;
-      _targetRow = (phase % 2 == 0) ? 1 : 2;
-      _targetCol = (phase % 2 == 0) ? 2 : 3;
-      if (phase >= 10) _obstacles.add('1,1');
-      if (phase >= 18) _obstacles.add('2,2');
-    } else {
-      _currentPieceType = ChessPieceType.queen;
-      _pieceRow = (phase % 2);
-      _pieceCol = (phase % 3);
-      _targetRow = 3;
-      _targetCol = (phase % 4);
-      if (phase >= 6) _obstacles.add('1,2');
-      if (phase >= 14) _obstacles.add('2,1');
+    final level = profile.chessLevel;
+    final seed = _missionNumber + (level * 10);
+    final random = Random(seed);
+
+    // Posición inicial y objetivo según la pieza seleccionada
+    switch (_currentPieceType) {
+      case ChessPieceType.rook:
+        _pieceRow = random.nextInt(4);
+        _pieceCol = 0;
+        _targetRow = (_pieceRow + (random.nextBool() ? 0 : 2)) % 4;
+        _targetCol = 3;
+        if (level >= 2) _obstacles.add('$_pieceRow,2');
+        if (level >= 3) _obstacles.add('${(_pieceRow + 1) % 4},1');
+        break;
+
+      case ChessPieceType.bishop:
+        _pieceRow = random.nextBool() ? 0 : 1;
+        _pieceCol = random.nextBool() ? 0 : 1;
+        _targetRow = (_pieceRow == 0) ? 3 : 2;
+        _targetCol = (_pieceCol == 0) ? 3 : 2;
+        if (level >= 2) _obstacles.add('1,2');
+        if (level >= 3) _obstacles.add('2,1');
+        break;
+
+      case ChessPieceType.knight:
+        _pieceRow = random.nextInt(3);
+        _pieceCol = 0;
+        _targetRow = (_pieceRow + 1).clamp(0, 3);
+        _targetCol = (random.nextBool() ? 2 : 3);
+        if (level >= 2) _obstacles.add('1,1');
+        if (level >= 3) _obstacles.add('2,2');
+        break;
+
+      case ChessPieceType.queen:
+        _pieceRow = random.nextInt(2);
+        _pieceCol = random.nextInt(2);
+        _targetRow = 3;
+        _targetCol = random.nextInt(4);
+        if (level >= 2) _obstacles.add('1,2');
+        if (level >= 3) _obstacles.add('2,1');
+        break;
     }
 
-    // Saludo solo en la primera misión de la visita
+    // Asegurar que inicio y meta no sean obstáculos
+    _obstacles.remove('$_pieceRow,$_pieceCol');
+    _obstacles.remove('$_targetRow,$_targetCol');
+
+    // Solo saluda al niño por única vez en la visita
     if (!_hasGreetedThisVisit) {
       _hasGreetedThisVisit = true;
-      _teacherSpeech = '¡Hola ${profile.name}! Bienvenido al Mini-Ajedrez. Mueve ${_getPieceName()} hasta la gema dorada en la misión $_missionNumber.';
+      _teacherSpeech = '¡Hola ${profile.name}! Bienvenido a Mini-Ajedrez Nivel $level. Mueve ${_getPieceName()} hasta la gema dorada en la misión $_missionNumber.';
     } else {
-      final rand = Random();
-      _teacherSpeech = _variedPrompts[rand.nextInt(_variedPrompts.length)];
+      _teacherSpeech = _variedPrompts[random.nextInt(_variedPrompts.length)];
     }
 
     TeacherVoiceService.instance.speak(_teacherSpeech);
@@ -215,16 +223,31 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
       });
 
       if (_pieceRow == _targetRow && _pieceCol == _targetCol) {
+        final profile = ref.read(childProfileProvider);
+        final isFinalOfLevel = _missionNumber >= totalChessMissions;
+
         setState(() {
           _missionComplete = true;
           _isAutoAdvancing = true;
           _confettiController.play();
-          _teacherSpeech = '¡Excelente jugada! Llegaste a la gema mágica y ganaste una estrella. ¡Felicitaciones!';
+
+          if (isFinalOfLevel) {
+            _teacherSpeech = '¡Increíble maestría ${profile.name}! ¡Completaste las 100 misiones del Nivel ${profile.chessLevel}! ¡Avanzas al Nivel ${profile.chessLevel + 1} de ajedrez!';
+          } else {
+            _teacherSpeech = '¡Excelente jugada! Llegaste a la gema mágica y ganaste una estrella. ¡Felicitaciones!';
+          }
         });
 
         ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.chess);
 
-        final nextMission = (_missionNumber < totalChessMissions) ? _missionNumber + 1 : 1;
+        int nextMission;
+        if (isFinalOfLevel) {
+          ref.read(childProfileProvider.notifier).advanceLevel(GameType.chess);
+          nextMission = 1;
+        } else {
+          nextMission = _missionNumber + 1;
+        }
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('chess_mission_index', nextMission);
 
@@ -239,7 +262,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         }
       } else {
         setState(() {
-          _teacherSpeech = '¡Buen paso! Ahora busca el siguiente movimiento para acercarte a la gema.';
+          _teacherSpeech = '¡Buen paso! Ahora busca el siguiente movimiento para llegar a la gema.';
         });
         TeacherVoiceService.instance.speak(_teacherSpeech);
       }
@@ -248,13 +271,13 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         _isTip = true;
         switch (_currentPieceType) {
           case ChessPieceType.rook:
-            _teacherSpeech = 'La Torre solo puede caminar hacia adelante, atrás o a los lados en línea recta. ¡Toca un punto verde!';
+            _teacherSpeech = 'La Torre solo camina derecho hacia adelante, atrás o a los lados. ¡Toca un punto verde!';
             break;
           case ChessPieceType.bishop:
-            _teacherSpeech = 'El Alfil solo camina en diagonal por casillas del mismo color. ¡Mira las casillas con puntos verdes!';
+            _teacherSpeech = 'El Alfil solo camina en diagonal por casillas del mismo color. ¡Mira las casillas sugeridas!';
             break;
           case ChessPieceType.knight:
-            _teacherSpeech = 'El caballo salta dibujando una L: dos casillas y dobla una. ¡Toca una casilla sugerida!';
+            _teacherSpeech = 'El caballo salta en forma de L: dos pasos y dobla uno. ¡Toca una de las casillas con punto verde!';
             break;
           case ChessPieceType.queen:
             _teacherSpeech = 'La reina puede ir recto o en diagonal, pero sin atravesar rocas. ¡Busca un camino libre!';
@@ -291,7 +314,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mini-Ajedrez (Misión $_missionNumber de $totalChessMissions)'),
+        title: Text('Mini-Ajedrez (Nivel ${profile.chessLevel})'),
         backgroundColor: const Color(0xFF8E44AD),
         foregroundColor: Colors.white,
       ),
@@ -334,7 +357,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                             ],
                           ),
                           child: Text(
-                            'Misión $_missionNumber de $totalChessMissions 🏆',
+                            'Nivel ${profile.chessLevel} • Misión $_missionNumber/100 🏆',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -407,87 +430,87 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                                 final isValidTarget = _isValidMove(row, col);
 
                                 return GestureDetector(
-                                onTap: () => _onTileTapped(row, col),
-                                child: Container(
-                                  color: isLight ? const Color(0xFFF0D9B5) : const Color(0xFFB58863),
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      if (isValidTarget && !_missionComplete)
-                                        Container(
-                                          width: 20,
-                                          height: 20,
-                                          decoration: BoxDecoration(
-                                            color: Colors.green.withValues(alpha: 0.75),
-                                            shape: BoxShape.circle,
-                                            boxShadow: const [
-                                              BoxShadow(color: Colors.white, blurRadius: 4)
-                                            ],
-                                          ),
-                                        ),
-                                      if (isObstacle)
-                                        Padding(
-                                          padding: const EdgeInsets.all(4.0),
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: const Text('🪨', style: TextStyle(fontSize: 32)),
-                                          ),
-                                        ),
-                                      if (isTargetHere && !_missionComplete)
-                                        Padding(
-                                          padding: const EdgeInsets.all(4.0),
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: const Text('💎', style: TextStyle(fontSize: 32)),
-                                          ),
-                                        ),
-                                      if (isPieceHere)
-                                        Padding(
-                                          padding: const EdgeInsets.all(4.0),
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              _getPieceEmoji(),
-                                              style: const TextStyle(fontSize: 38),
+                                  onTap: () => _onTileTapped(row, col),
+                                  child: Container(
+                                    color: isLight ? const Color(0xFFF0D9B5) : const Color(0xFFB58863),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        if (isValidTarget && !_missionComplete)
+                                          Container(
+                                            width: 20,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              color: Colors.green.withValues(alpha: 0.75),
+                                              shape: BoxShape.circle,
+                                              boxShadow: const [
+                                                BoxShadow(color: Colors.white, blurRadius: 4)
+                                              ],
                                             ),
                                           ),
-                                        ),
-                                    ],
+                                        if (isObstacle)
+                                          Padding(
+                                            padding: const EdgeInsets.all(4.0),
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: const Text('🪨', style: TextStyle(fontSize: 32)),
+                                            ),
+                                          ),
+                                        if (isTargetHere && !_missionComplete)
+                                          Padding(
+                                            padding: const EdgeInsets.all(4.0),
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: const Text('💎', style: TextStyle(fontSize: 32)),
+                                            ),
+                                          ),
+                                        if (isPieceHere)
+                                          Padding(
+                                            padding: const EdgeInsets.all(4.0),
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                _getPieceEmoji(),
+                                                style: const TextStyle(fontSize: 38),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-                if (_isAutoAdvancing) ...[
-                  const SizedBox(height: 16),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_circle, color: AppColors.playfulGreen, size: 24),
-                      SizedBox(width: 8),
-                      Text(
-                        '¡Misión Cumplida! Avanzando al siguiente reto...',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.playfulGreen,
+                  if (_isAutoAdvancing) ...[
+                    const SizedBox(height: 16),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, color: AppColors.playfulGreen, size: 24),
+                        SizedBox(width: 8),
+                        Text(
+                          '¡Misión Cumplida! Avanzando...',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.playfulGreen,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 }

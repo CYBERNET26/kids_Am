@@ -46,32 +46,36 @@ class ChildProfileNotifier extends Notifier<ChildProfile> {
     final currentConsecutive = state.consecutiveWins + 1;
     final newStars = state.totalStars + 1;
 
+    final updated = state.copyWith(
+      totalStars: newStars,
+      consecutiveWins: currentConsecutive,
+    );
+    state = updated;
+    _saveToStorage(updated);
+  }
+
+  void advanceLevel(GameType gameType) {
     int newMath = state.mathLevel;
     int newPuzzle = state.puzzleLevel;
     int newChess = state.chessLevel;
-    int resetWins = currentConsecutive;
 
-    if (currentConsecutive >= 2) {
-      resetWins = 0;
-      switch (gameType) {
-        case GameType.visualMath:
-          newMath = (newMath < 10) ? newMath + 1 : newMath;
-          break;
-        case GameType.puzzle:
-          newPuzzle = (newPuzzle < 5) ? newPuzzle + 1 : newPuzzle;
-          break;
-        case GameType.chess:
-          newChess = (newChess < 6) ? newChess + 1 : newChess;
-          break;
-      }
+    switch (gameType) {
+      case GameType.visualMath:
+        newMath++;
+        break;
+      case GameType.puzzle:
+        newPuzzle++;
+        break;
+      case GameType.chess:
+        newChess++;
+        break;
     }
 
     final updated = state.copyWith(
-      totalStars: newStars,
-      consecutiveWins: resetWins,
       mathLevel: newMath,
       puzzleLevel: newPuzzle,
       chessLevel: newChess,
+      consecutiveWins: 0,
     );
     state = updated;
     _saveToStorage(updated);

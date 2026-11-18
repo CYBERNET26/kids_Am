@@ -21,7 +21,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
   static const int totalPuzzles = 100;
   late ConfettiController _confettiController;
 
-  int _puzzleNumber = 1; // 1 a 100
+  int _puzzleNumber = 1;
   bool _hasGreetedThisVisit = false;
 
   int _gridDimension = 2;
@@ -43,9 +43,9 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     {'title': 'Exploración Espacial 🚀', 'icons': ['🚀', '👨‍🚀', '🛸', '🪐', '⭐️', '🌕', '☄️', '🛰️', '👾', '🌍', '🌞', '🌌', '🌠', '🔭', '🌑', '✨']},
     {'title': 'Maravillas del Océano 🐬', 'icons': ['🐬', '🐳', '🐙', '🦀', '🐠', '🦈', '🐢', '🦭', '🦞', '🐚', '🌊', '🦑', '🐡', '🪸', '⚓️', '💎']},
     {'title': 'Dinosaurios del Pasado 🦖', 'icons': ['🦖', '🦕', '🐊', '🦎', '🦴', '🌋', '🌴', '🪨', '🥚', '🌿', '🪵', '🐾', '☄️', '⛰️', '🍂', '🍁']},
-    {'title': 'Vehículos en Marcha 🚒', 'icons': ['🚒', '🚓', '🚑', '🚁', '✈️', '🚜', '🏎️', '🛵', '🚲', '⛴️', '🚂', '🚀', '🛻', '🏍️', ' submarine', '🛸']},
+    {'title': 'Vehículos en Marcha 🚒', 'icons': ['🚒', '🚓', '🚑', '🚁', '✈️', '🚜', '🏎️', '🛵', '🚲', '⛴️', '🚂', '🚀', '🛻', '🏍️', '🛸', '⛵️']},
     {'title': 'Instrumentos Musicales 🎸', 'icons': ['🎸', '🥁', '🎺', '🎹', '🎻', '🎷', '🪗', '🪘', '🎤', '🎧', '🎼', '🎵', '🎶', '📻', '🔔', '🪕']},
-    {'title': 'Deportes y Juegos ⚽️', 'icons': ['⚽️', '🏀', '🎾', '⚾️', '🏈', '🏐', '🏉', '🎳', '🥊', '🏓', '🏸', '⛸️', '🛹', '🛼', '🚴', '🏆']},
+    {'title': 'Deportes y Juegos ⚽️', 'icons': ['⚽️', '🏀', '🎾', '⚾️', '🏈', '🏐', '🎳', '🥊', '🏓', '🏸', '⛸️', '🛹', '🛼', '🚴', '🏆', '🎯']},
     {'title': 'Dulces y Golosinas 🍦', 'icons': ['🍦', '🧁', '🍩', '🍪', '🍫', '🍭', '🍬', '🥞', '🍰', '🧇', '🍮', '🥧', '🍧', '🎂', '🍯', '🍿']},
     {'title': 'El Bosque Mágico 🌲', 'icons': ['🌲', '🍄', '🐿️', '🦌', '🦔', '🦊', '🍁', '🪵', '🍂', '🦉', '🌿', '🌰', '🦋', '🐝', '⛺️', '🏕️']},
     {'title': 'Bichitos del Jardín 🐞', 'icons': ['🐞', '🐝', '🦋', '🐛', '🐜', '🐌', '🦗', '🕷️', '🌸', '🌼', '🌻', '🌺', '🌷', '🌱', '🌾', '🪴']},
@@ -86,18 +86,20 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
   void _initPuzzle() {
     final profile = ref.read(childProfileProvider);
 
-    // Dimensiones según el número de ejercicio (1 a 100)
-    // 1-20: 2x2 = 4 piezas
-    // 21-60: 3x3 = 9 piezas
-    // 61-100: 4x4 = 16 piezas
-    if (_puzzleNumber <= 20) {
+    // Dimensiones según el nivel del niño:
+    // Nivel 1: 2x2 = 4 piezas
+    // Nivel 2: 3x3 = 9 piezas
+    // Nivel 3+: 4x4 = 16 piezas
+    final level = profile.puzzleLevel;
+    if (level <= 1) {
       _gridDimension = 2;
-    } else if (_puzzleNumber <= 60) {
+    } else if (level == 2) {
       _gridDimension = 3;
     } else {
       _gridDimension = 4;
     }
 
+    // MEZCLADO CONSTANTE: Rota a través de las 20 temáticas distintas en cada puzle
     final themeIndex = (_puzzleNumber - 1) % _puzzleThemesBank.length;
     final themeData = _puzzleThemesBank[themeIndex];
     _themeTitle = themeData['title'] as String;
@@ -111,10 +113,10 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     _isAutoAdvancing = false;
     _isTip = false;
 
-    // Saludo solo en el primer puzle de la visita
+    // Solo saluda por única vez al entrar al juego en esta visita
     if (!_hasGreetedThisVisit) {
       _hasGreetedThisVisit = true;
-      _teacherSpeech = '¡Hola ${profile.name}! Vamos a armar rompecabezas divertidos. Empecemos con $_themeTitle.';
+      _teacherSpeech = '¡Hola ${profile.name}! Bienvenido a Rompecabezas Nivel $level. Empecemos con $_themeTitle.';
     } else {
       final rand = Random();
       _teacherSpeech = _variedPrompts[rand.nextInt(_variedPrompts.length)];
@@ -131,17 +133,32 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
       }
     }
 
+    final profile = ref.read(childProfileProvider);
+    final isFinalOfLevel = _puzzleNumber >= totalPuzzles;
+
     setState(() {
       _isSolved = true;
       _isAutoAdvancing = true;
       _isTip = false;
       _confettiController.play();
-      _teacherSpeech = '¡Bravo! Completaste el rompecabezas de $_themeTitle. ¡Eres increíble! Pasemos al siguiente nivel.';
+
+      if (isFinalOfLevel) {
+        _teacherSpeech = '¡Sensacional logro ${profile.name}! ¡Armaste los 100 rompecabezas del Nivel ${profile.puzzleLevel}! ¡Subes al Nivel ${profile.puzzleLevel + 1} con puzles más desafiantes!';
+      } else {
+        _teacherSpeech = '¡Bravo! Completaste el rompecabezas de $_themeTitle. ¡Eres increíble!';
+      }
     });
 
     ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.puzzle);
 
-    final nextPuzzle = (_puzzleNumber < totalPuzzles) ? _puzzleNumber + 1 : 1;
+    int nextPuzzle;
+    if (isFinalOfLevel) {
+      ref.read(childProfileProvider.notifier).advanceLevel(GameType.puzzle);
+      nextPuzzle = 1;
+    } else {
+      nextPuzzle = _puzzleNumber + 1;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('puzzle_number_index', nextPuzzle);
 
@@ -170,7 +187,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rompecabezas (Puzle $_puzzleNumber de $totalPuzzles)'),
+        title: Text('Rompecabezas (Nivel ${profile.puzzleLevel})'),
         backgroundColor: const Color(0xFF5CD85A),
         foregroundColor: Colors.white,
       ),
@@ -213,7 +230,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                             ],
                           ),
                           child: Text(
-                            '$_themeTitle (Puzle $_puzzleNumber/$totalPuzzles)',
+                            'Nivel ${profile.puzzleLevel} • Puzle $_puzzleNumber/100 ⭐',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
