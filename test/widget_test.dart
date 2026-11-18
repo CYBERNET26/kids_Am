@@ -17,6 +17,9 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('¡Hola,'), findsOneWidget);
-    expect(find.text('Elige tu Aventura de Hoy 🚀'), findsOneWidget);
+    expect(find.text('Elige tu Aventura 🚀'), findsOneWidget);
+
+    // Drenar el timer de comprobación de actualizaciones de fondo
+    await tester.pump(const Duration(seconds: 4));
   });
 }

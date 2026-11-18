@@ -1,6 +1,6 @@
 class AppVersion {
-  static const String currentVersion = '1.0.1';
-  static const int currentVersionCode = 2;
+  static const String currentVersion = '1.0.2';
+  static const int currentVersionCode = 3;
 
   /// Calcula la siguiente versión según la regla:
   /// 1.0.0 -> 1.0.1 ... hasta 1.0.9 -> 1.1.0

@@ -164,34 +164,76 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
       switch (_currentOperation) {
         case MathOperation.addition:
           if (level == 1) {
-            _firstGroup = random.nextInt(3) + 1;
-            _secondGroup = random.nextInt(3) + 1;
+            // PROGRESIÓN GRADUAL NIVEL 1 (Parámetro máximo hasta 100):
+            if (_exerciseNumber <= 15) {
+              // Fase 1: 1 a 10 (conteo visual directo)
+              _firstGroup = random.nextInt(5) + 1;
+              _secondGroup = random.nextInt(5) + 1;
+            } else if (_exerciseNumber <= 35) {
+              // Fase 2: hasta 20
+              _firstGroup = random.nextInt(10) + 2;
+              _secondGroup = random.nextInt(8) + 1;
+            } else if (_exerciseNumber <= 55) {
+              // Fase 3: decenas y números hasta 40
+              _firstGroup = (random.nextInt(3) + 1) * 10 + random.nextInt(5);
+              _secondGroup = random.nextInt(10) + 1;
+            } else if (_exerciseNumber <= 75) {
+              // Fase 4: números hasta 70
+              _firstGroup = random.nextInt(35) + 15;
+              _secondGroup = random.nextInt(20) + 5;
+            } else {
+              // Fase 5: desafío final hasta 100
+              _firstGroup = random.nextInt(45) + 25;
+              final maxSecond = 100 - _firstGroup;
+              _secondGroup = random.nextInt(maxSecond.clamp(5, 35)) + 5;
+            }
           } else if (level == 2) {
-            _firstGroup = random.nextInt(6) + 1;
-            _secondGroup = random.nextInt(6) + 1;
+            // Nivel 2: sumas con llevadas de 100 a 200
+            _firstGroup = random.nextInt(60) + 40;
+            _secondGroup = random.nextInt(60) + 20;
           } else if (level <= 5) {
-            _firstGroup = random.nextInt(10) + 1;
-            _secondGroup = random.nextInt(10) + 1;
+            _firstGroup = random.nextInt(80) + 20;
+            _secondGroup = random.nextInt(80) + 20;
           } else {
-            _firstGroup = random.nextInt(15) + 2;
-            _secondGroup = random.nextInt(15) + 2;
+            _firstGroup = random.nextInt(120) + 30;
+            _secondGroup = random.nextInt(120) + 30;
           }
           _correctResult = _firstGroup + _secondGroup;
           break;
 
         case MathOperation.subtraction:
           if (level == 1) {
-            _firstGroup = random.nextInt(4) + 2; // 2..5
-            _secondGroup = random.nextInt(_firstGroup - 1) + 1;
+            // PROGRESIÓN GRADUAL NIVEL 1 (Parámetro máximo hasta 100):
+            if (_exerciseNumber <= 15) {
+              // Fase 1: restas de 1 a 10
+              _firstGroup = random.nextInt(6) + 4; // 4..9
+              _secondGroup = random.nextInt(_firstGroup - 1) + 1;
+            } else if (_exerciseNumber <= 35) {
+              // Fase 2: restas hasta 20
+              _firstGroup = random.nextInt(10) + 10; // 10..19
+              _secondGroup = random.nextInt(8) + 1;
+            } else if (_exerciseNumber <= 55) {
+              // Fase 3: restas hasta 40
+              _firstGroup = random.nextInt(20) + 20; // 20..39
+              _secondGroup = random.nextInt(15) + 2;
+            } else if (_exerciseNumber <= 75) {
+              // Fase 4: restas hasta 70
+              _firstGroup = random.nextInt(30) + 40; // 40..69
+              _secondGroup = random.nextInt(25) + 5;
+            } else {
+              // Fase 5: restas partiendo de hasta 100
+              _firstGroup = random.nextInt(31) + 70; // 70..100
+              _secondGroup = random.nextInt(40) + 10;
+            }
           } else if (level == 2) {
-            _firstGroup = random.nextInt(8) + 3; // 3..10
-            _secondGroup = random.nextInt(_firstGroup - 1) + 1;
+            _firstGroup = random.nextInt(80) + 100; // 100..180
+            _secondGroup = random.nextInt(60) + 20;
           } else if (level <= 5) {
-            _firstGroup = random.nextInt(15) + 5;
-            _secondGroup = random.nextInt(_firstGroup - 2) + 1;
+            _firstGroup = random.nextInt(100) + 50;
+            _secondGroup = random.nextInt(45) + 10;
           } else {
-            _firstGroup = random.nextInt(20) + 8;
-            _secondGroup = random.nextInt(_firstGroup - 3) + 1;
+            _firstGroup = random.nextInt(150) + 50;
+            _secondGroup = random.nextInt(80) + 15;
           }
           _correctResult = _firstGroup - _secondGroup;
           break;
@@ -249,12 +291,25 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
       }
     }
 
-    // Opciones de respuesta
+    // Opciones de respuesta pedagógicas
     final Set<int> optionSet = {_correctResult};
+    final List<int> possibleDeltas = _correctResult > 30
+        ? [1, 2, 5, 10, -1, -2, -5, -10]
+        : [1, 2, 3, -1, -2, -3];
+    possibleDeltas.shuffle(random);
+    for (final d in possibleDeltas) {
+      if (optionSet.length >= 3) break;
+      final val = _correctResult + d;
+      if (val >= 0 && val != _correctResult) {
+        optionSet.add(val);
+      }
+    }
     while (optionSet.length < 3) {
       final offset = random.nextBool() ? 1 : -1;
-      final distractor = (_correctResult + offset * (random.nextInt(3) + 1)).clamp(0, 100);
-      optionSet.add(distractor);
+      final distractor = (_correctResult + offset * (random.nextInt(6) + 1)).clamp(0, 200);
+      if (distractor != _correctResult) {
+        optionSet.add(distractor);
+      }
     }
     _options = optionSet.toList()..shuffle();
 
@@ -654,18 +709,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
       case MathOperation.addition:
         return Column(
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: List.generate(
-                _firstGroup.clamp(1, 15),
-                (i) => FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(_currentEmoji, style: const TextStyle(fontSize: 34)),
-                ),
-              ),
-            ),
+            _buildNumberRepresentation(_firstGroup, _currentEmoji),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
@@ -677,36 +721,14 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                 ),
               ),
             ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: List.generate(
-                _secondGroup.clamp(1, 15),
-                (i) => FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(_currentEmoji, style: const TextStyle(fontSize: 34)),
-                ),
-              ),
-            ),
+            _buildNumberRepresentation(_secondGroup, _currentEmoji),
           ],
         );
 
       case MathOperation.subtraction:
         return Column(
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: List.generate(
-                _firstGroup.clamp(1, 15),
-                (i) => FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(_currentEmoji, style: const TextStyle(fontSize: 34)),
-                ),
-              ),
-            ),
+            _buildNumberRepresentation(_firstGroup, _currentEmoji),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
@@ -718,18 +740,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                 ),
               ),
             ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: List.generate(
-                _secondGroup.clamp(1, 15),
-                (i) => FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(_currentEmoji, style: const TextStyle(fontSize: 34)),
-                ),
-              ),
-            ),
+            _buildNumberRepresentation(_secondGroup, _currentEmoji),
           ],
         );
 
@@ -808,5 +819,87 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
           ],
         );
     }
+  }
+
+  Widget _buildNumberRepresentation(int count, String emoji) {
+    if (count <= 12) {
+      return Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        alignment: WrapAlignment.center,
+        children: List.generate(
+          count,
+          (i) => FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(emoji, style: const TextStyle(fontSize: 30)),
+          ),
+        ),
+      );
+    }
+
+    // Para números > 12: Representación pedagógica Base 10 (Decenas y Unidades)
+    final tens = count ~/ 10;
+    final units = count % 10;
+
+    return Column(
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            // Bloques de decenas
+            ...List.generate(tens, (i) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.shade700, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.amber.shade200.withValues(alpha: 0.5),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(emoji, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 4),
+                    const Text(
+                      '10',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        color: Color(0xFF795548),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+
+            // Unidades sueltas
+            if (units > 0)
+              ...List.generate(units, (i) {
+                return Text(emoji, style: const TextStyle(fontSize: 22));
+              }),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '$count = $tens decena${tens > 1 ? "s" : ""}${units > 0 ? " y $units unidad${units > 1 ? "es" : ""}" : ""}',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade700,
+          ),
+        ),
+      ],
+    );
   }
 }
