@@ -1,19 +1,45 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kids_am/features/profile/domain/models/child_profile.dart';
 import 'package:kids_am/features/games/domain/models/game_level.dart';
 
 class ChildProfileNotifier extends Notifier<ChildProfile> {
+  static const _storageKey = 'saved_child_profile';
+
+  static const _defaultProfile = ChildProfile(
+    id: 'child_1',
+    name: 'Leo',
+    age: 6,
+    totalStars: 10,
+    mathLevel: 1,
+    puzzleLevel: 1,
+    chessLevel: 1,
+  );
+
   @override
   ChildProfile build() {
-    return const ChildProfile(
-      id: 'child_1',
-      name: 'Leo',
-      age: 6,
-      totalStars: 5,
-      mathLevel: 1,
-      puzzleLevel: 1,
-      chessLevel: 1,
-    );
+    _loadFromStorage();
+    return _defaultProfile;
+  }
+
+  Future<void> _loadFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_storageKey);
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final decoded = jsonDecode(jsonString);
+        state = ChildProfile.fromMap(Map<String, dynamic>.from(decoded));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveToStorage(ChildProfile profile) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = jsonEncode(profile.toMap());
+      await prefs.setString(_storageKey, jsonString);
+    } catch (_) {}
   }
 
   void recordWin({required GameType gameType}) {
@@ -25,7 +51,6 @@ class ChildProfileNotifier extends Notifier<ChildProfile> {
     int newChess = state.chessLevel;
     int resetWins = currentConsecutive;
 
-    // Con cada 2 victorias consecutivas o al completar el ejercicio, avanza de nivel
     if (currentConsecutive >= 2) {
       resetWins = 0;
       switch (gameType) {
@@ -41,29 +66,50 @@ class ChildProfileNotifier extends Notifier<ChildProfile> {
       }
     }
 
-    state = state.copyWith(
+    final updated = state.copyWith(
       totalStars: newStars,
       consecutiveWins: resetWins,
       mathLevel: newMath,
       puzzleLevel: newPuzzle,
       chessLevel: newChess,
     );
+    state = updated;
+    _saveToStorage(updated);
+  }
+
+  bool deductStars(int amount) {
+    if (state.totalStars >= amount) {
+      final updated = state.copyWith(totalStars: state.totalStars - amount);
+      state = updated;
+      _saveToStorage(updated);
+      return true;
+    }
+    return false;
   }
 
   void updateName(String newName) {
-    state = state.copyWith(name: newName);
+    final trimmed = newName.trim();
+    if (trimmed.isNotEmpty) {
+      final updated = state.copyWith(name: trimmed);
+      state = updated;
+      _saveToStorage(updated);
+    }
   }
 
   void updateAge(int newAge) {
-    state = state.copyWith(age: newAge);
+    final updated = state.copyWith(age: newAge);
+    state = updated;
+    _saveToStorage(updated);
   }
 
   void setLevels({int? math, int? puzzle, int? chess}) {
-    state = state.copyWith(
+    final updated = state.copyWith(
       mathLevel: math ?? state.mathLevel,
       puzzleLevel: puzzle ?? state.puzzleLevel,
       chessLevel: chess ?? state.chessLevel,
     );
+    state = updated;
+    _saveToStorage(updated);
   }
 }
 

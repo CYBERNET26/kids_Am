@@ -2,13 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kids_am/core/constants/app_colors.dart';
+import 'package:kids_am/core/services/teacher_voice_service.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
+import 'package:kids_am/features/rewards/presentation/widgets/rewards_shop_dialog.dart';
 
-class KidsHomeScreen extends ConsumerWidget {
+class KidsHomeScreen extends ConsumerStatefulWidget {
   const KidsHomeScreen({super.key});
 
+  // Controla que el saludo con el nombre solo se dé UNA VEZ por sesión al abrir la app
+  static bool hasGreetedSession = false;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KidsHomeScreen> createState() => _KidsHomeScreenState();
+}
+
+class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkInitialGreeting();
+    });
+  }
+
+  void _checkInitialGreeting() {
+    if (!KidsHomeScreen.hasGreetedSession) {
+      KidsHomeScreen.hasGreetedSession = true;
+      final profile = ref.read(childProfileProvider);
+      final greeting = '¡Hola ${profile.name}! ¡Qué bueno que volviste! Elige tu aventura de hoy.';
+      TeacherVoiceService.instance.speak(greeting);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(childProfileProvider);
 
     return Scaffold(
@@ -16,7 +43,7 @@ class KidsHomeScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header con Perfil, Estrellas y botón de Padres
+            // Header con Perfil, Estrellas / Tienda y botón de Padres
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
@@ -42,7 +69,7 @@ class KidsHomeScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Nombre y Nivel en Expanded para evitar desbordamiento
+                  // Nombre y Nivel en Expanded
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,35 +98,40 @@ class KidsHomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Contador de Estrellas
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.sunnyYellow,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.orange.withValues(alpha: 0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.star, color: Colors.orange, size: 22),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${profile.totalStars}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+                  const SizedBox(width: 6),
+                  // Botón Interactivo de Estrellas y Canje de Premios
+                  GestureDetector(
+                    onTap: () => RewardsShopDialog.show(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.sunnyYellow,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star_rounded, color: Colors.orange, size: 22),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${profile.totalStars}',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          const Text('🎁', style: TextStyle(fontSize: 14)),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -115,7 +147,7 @@ class KidsHomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Título de la aventura centrado
+            // Título de la aventura
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Align(
@@ -133,14 +165,14 @@ class KidsHomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 8),
 
-            // Cuadrícula interactiva de mundos perfectamente centrada y adaptativa
+            // Cuadrícula interactiva de mundos
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 crossAxisSpacing: 14,
                 mainAxisSpacing: 14,
-                childAspectRatio: 0.84, // Proporción cómoda para móviles evitando desbordes
+                childAspectRatio: 0.84,
                 children: [
                   _WorldCard(
                     title: 'Mundo Matemático',
@@ -226,14 +258,12 @@ class _WorldCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icono centrado en burbuja luminosa
             CircleAvatar(
               radius: 28,
               backgroundColor: Colors.white.withValues(alpha: 0.28),
               child: Icon(icon, size: 34, color: Colors.white),
             ),
             const SizedBox(height: 8),
-            // Píldora de categoría centrada
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
@@ -252,7 +282,6 @@ class _WorldCard extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            // Título centrado con FittedBox para nunca salirse del cuadrado
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
@@ -266,7 +295,6 @@ class _WorldCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 3),
-            // Subtítulo centrado
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(

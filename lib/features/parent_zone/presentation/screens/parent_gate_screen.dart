@@ -6,6 +6,7 @@ import 'package:kids_am/core/constants/app_colors.dart';
 import 'package:kids_am/core/services/teacher_voice_service.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/video_library/presentation/providers/video_library_provider.dart';
+import 'package:kids_am/features/rewards/presentation/providers/rewards_provider.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -19,19 +20,16 @@ class _ParentGateScreenState extends State<ParentGateScreen> {
   bool _hasAccount = false;
   bool _isAuthenticated = false;
 
-  // Controllers para Crear Cuenta
   final _createNameController = TextEditingController(text: 'Papá / Mamá');
   final _createEmailController = TextEditingController();
   final _createPasswordController = TextEditingController();
   final _createConfirmPasswordController = TextEditingController();
   bool _obscureCreatePass = true;
 
-  // Controllers para Iniciar Sesión
   final _loginPasswordController = TextEditingController();
   bool _obscureLoginPass = true;
   String? _loginError;
 
-  // Fallback Desafío Matemático para recuperar contraseña
   bool _isRecovering = false;
   late int _firstNum;
   late int _secondNum;
@@ -117,7 +115,7 @@ class _ParentGateScreenState extends State<ParentGateScreen> {
     if (parsed == _mathResult) {
       setState(() {
         _isRecovering = false;
-        _hasAccount = false; // Permite crear una nueva contraseña
+        _hasAccount = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Identidad verificada. Por favor crea una nueva contraseña.')),
@@ -201,7 +199,7 @@ class _ParentGateScreenState extends State<ParentGateScreen> {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Crea tu contraseña de acceso para administrar videos educativos, ver el progreso y configurar Kids Am.',
+          'Crea tu contraseña de acceso para administrar videos educativos, premios y el nombre del niño.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, color: AppColors.textMuted),
         ),
@@ -277,7 +275,7 @@ class _ParentGateScreenState extends State<ParentGateScreen> {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Ingresa tu contraseña parental para gestionar videos y configuraciones.',
+          'Ingresa tu contraseña parental para gestionar videos, premios y configuraciones.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, color: AppColors.textMuted),
         ),
@@ -395,12 +393,24 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   final _videoTitleController = TextEditingController();
   final _videoUrlController = TextEditingController();
   String _selectedCategory = 'Matemáticas';
+
+  // Controlador de nombre del niño
+  late TextEditingController _childNameController;
+
+  // Controladores de Premios
+  final _rewardTitleController = TextEditingController();
+  final _rewardStarsController = TextEditingController(text: '10');
+  final _rewardDescController = TextEditingController();
+  String _selectedRewardIcon = '🎁';
+
   bool _voiceEnabled = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
+    final profile = ref.read(childProfileProvider);
+    _childNameController = TextEditingController(text: profile.name);
     _loadSettings();
   }
 
@@ -417,7 +427,136 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _tabController.dispose();
     _videoTitleController.dispose();
     _videoUrlController.dispose();
+    _childNameController.dispose();
+    _rewardTitleController.dispose();
+    _rewardStarsController.dispose();
+    _rewardDescController.dispose();
     super.dispose();
+  }
+
+  void _showAddRewardDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final icons = ['🎁', '🍦', '🍕', '🎠', '🍿', '🎮', '🎨', '⚽️', '🚴', '🛹', '🍫'];
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Row(
+                children: [
+                  Icon(Icons.card_giftcard_rounded, color: AppColors.primaryBlue),
+                  SizedBox(width: 8),
+                  Text('Nuevo Premio por Estrellas'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Define el premio y la cantidad de estrellas necesarias para que tu hijo/a pueda canjearlo.',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _rewardTitleController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre del premio',
+                        hintText: 'Ej: Un Helado, Ir al cine',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _rewardStarsController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Costo en Estrellas ⭐',
+                        hintText: 'Ej: 10, 20',
+                        prefixIcon: const Icon(Icons.star_rounded, color: Colors.orange),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _rewardDescController,
+                      decoration: InputDecoration(
+                        labelText: 'Detalles o condición (opcional)',
+                        hintText: 'Ej: Elige 2 bochas de helado',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Elige un icono divertido:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: icons.map((icon) {
+                        final isSelected = _selectedRewardIcon == icon;
+                        return InkWell(
+                          onTap: () => setDialogState(() => _selectedRewardIcon = icon),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.sunnyYellow.withValues(alpha: 0.5)
+                                  : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? Colors.orange : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(icon, style: const TextStyle(fontSize: 24)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    final title = _rewardTitleController.text.trim();
+                    final stars = int.tryParse(_rewardStarsController.text.trim()) ?? 10;
+                    if (title.isNotEmpty && stars > 0) {
+                      ref.read(rewardsProvider.notifier).addReward(
+                            title: title,
+                            costStars: stars,
+                            icon: _selectedRewardIcon,
+                            description: _rewardDescController.text.trim(),
+                          );
+                      _rewardTitleController.clear();
+                      _rewardDescController.clear();
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('¡Premio creado con éxito!')),
+                      );
+                    }
+                  },
+                  child: const Text('Guardar Premio'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showAddVideoDialog() {
@@ -444,7 +583,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Pega cualquier enlace de YouTube o archivo de video directo (MP4). ¡Se reproducirá seguro dentro de Kids Am!',
+                      'Pega cualquier enlace de YouTube o video directo (MP4). ¡Se reproducirá de forma segura dentro de Kids Am!',
                       style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 16),
@@ -567,9 +706,11 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
           unselectedLabelColor: AppColors.textMuted,
           indicatorColor: AppColors.primaryBlue,
           indicatorWeight: 3,
+          isScrollable: false,
           tabs: const [
             Tab(icon: Icon(Icons.video_library), text: 'Videos'),
-            Tab(icon: Icon(Icons.insights), text: 'Progreso'),
+            Tab(icon: Icon(Icons.card_giftcard), text: 'Premios'),
+            Tab(icon: Icon(Icons.person_pin), text: 'Perfil'),
             Tab(icon: Icon(Icons.settings), text: 'Ajustes'),
           ],
         ),
@@ -578,7 +719,8 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
         controller: _tabController,
         children: [
           _buildVideosTab(),
-          _buildProgressTab(),
+          _buildRewardsTab(),
+          _buildProfileTab(),
           _buildSettingsTab(),
         ],
       ),
@@ -651,7 +793,89 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     );
   }
 
-  Widget _buildProgressTab() {
+  Widget _buildRewardsTab() {
+    final rewards = ref.watch(rewardsProvider);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Premios y Recompensas ⭐',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
+              ),
+              ElevatedButton.icon(
+                onPressed: _showAddRewardDialog,
+                icon: const Icon(Icons.add),
+                label: const Text('Crear Premio'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.playfulGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: rewards.isEmpty
+              ? const Center(child: Text('No hay premios configurados.'))
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: rewards.length,
+                  itemBuilder: (context, index) {
+                    final reward = rewards[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: AppColors.sunnyYellow.withValues(alpha: 0.35),
+                          child: Text(reward.icon, style: const TextStyle(fontSize: 24)),
+                        ),
+                        title: Text(reward.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(
+                          reward.description.isNotEmpty
+                              ? '${reward.description} • ⭐ ${reward.costStars} estrellas'
+                              : '⭐ ${reward.costStars} estrellas',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (reward.timesRedeemed > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.playfulGreen.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Canjeado: ${reward.timesRedeemed}x',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.playfulGreen),
+                                ),
+                              ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              tooltip: 'Eliminar premio',
+                              onPressed: () {
+                                ref.read(rewardsProvider.notifier).removeReward(reward.id);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileTab() {
     final profile = ref.watch(childProfileProvider);
 
     return SingleChildScrollView(
@@ -659,29 +883,88 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Tarjeta de Edición de Nombre del Niño
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Padding(
               padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Nombre del Niño / Explorador',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'La maestra usará este nombre para saludarlo y felicitarlo al jugar.',
+                    style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _childNameController,
+                          decoration: InputDecoration(
+                            hintText: 'Nombre del niño/a',
+                            prefixIcon: const Icon(Icons.edit, color: AppColors.primaryBlue),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        onPressed: () {
+                          final newName = _childNameController.text.trim();
+                          if (newName.isNotEmpty) {
+                            ref.read(childProfileProvider.notifier).updateName(newName);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('¡Nombre actualizado a "$newName"!')),
+                            );
+                          }
+                        },
+                        child: const Text('Guardar'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Resumen de Estrellas
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   const CircleAvatar(
-                    radius: 30,
+                    radius: 26,
                     backgroundColor: AppColors.sunnyYellow,
-                    child: Icon(Icons.face_5, size: 40, color: AppColors.primaryBlue),
+                    child: Icon(Icons.star_rounded, size: 36, color: Colors.orange),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          profile.name,
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          '${profile.totalStars} Estrellas Disponibles',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
                         ),
-                        Text(
-                          '${profile.totalStars} Estrellas Ganadas ⭐',
-                          style: const TextStyle(fontSize: 16, color: Colors.orange, fontWeight: FontWeight.w600),
+                        const Text(
+                          'Tu hijo/a puede canjearlas por los premios que configuraste.',
+                          style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                         ),
                       ],
                     ),
@@ -690,9 +973,10 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
               ),
             ),
           ),
-          const SizedBox(height: 20),
-          const Text('Niveles por Disciplina:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 18),
+          const Text('Niveles Actuales por Disciplina:', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
           _buildLevelCard(
             title: 'Mundo Matemático',
             currentLevel: profile.mathLevel,
@@ -776,6 +1060,21 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
               final prefs = await SharedPreferences.getInstance();
               await prefs.setBool('parent_voice_enabled', val);
               TeacherVoiceService.instance.isEnabled = val;
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: ListTile(
+            leading: const Icon(Icons.card_giftcard, color: AppColors.playfulGreen),
+            title: const Text('Restaurar Premios Sugeridos'),
+            subtitle: const Text('Restaura la lista de premios predeterminados'),
+            onTap: () {
+              ref.read(rewardsProvider.notifier).restoreDefaults();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Premios predeterminados restaurados')),
+              );
             },
           ),
         ),
