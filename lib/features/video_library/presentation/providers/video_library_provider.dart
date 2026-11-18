@@ -14,6 +14,7 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
       urlOrAssetPath: 'https://www.youtube.com/watch?v=pSqkWk_Q_i4',
       sourceType: VideoSourceType.youtube,
       category: 'Matemáticas',
+      rewardStars: 3,
     ),
     const VideoItem(
       id: 'vid_yt_2',
@@ -22,6 +23,7 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
       urlOrAssetPath: 'https://www.youtube.com/watch?v=65wZuz-8u-k',
       sourceType: VideoSourceType.youtube,
       category: 'Geometría',
+      rewardStars: 3,
     ),
     const VideoItem(
       id: 'vid_yt_3',
@@ -30,6 +32,7 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
       urlOrAssetPath: 'https://www.youtube.com/watch?v=kYJv8Z1kZ50',
       sourceType: VideoSourceType.youtube,
       category: 'Ajedrez',
+      rewardStars: 4,
     ),
     const VideoItem(
       id: 'vid_direct_1',
@@ -38,6 +41,7 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
       urlOrAssetPath: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
       sourceType: VideoSourceType.networkUrl,
       category: 'Ciencias',
+      rewardStars: 2,
     ),
   ];
 
@@ -74,6 +78,7 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
     required String url,
     required String category,
     String description = '',
+    int rewardStars = 3,
   }) {
     final isYt = url.contains('youtube.com') || url.contains('youtu.be');
     final newItem = VideoItem(
@@ -83,6 +88,7 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
       urlOrAssetPath: url,
       sourceType: isYt ? VideoSourceType.youtube : VideoSourceType.networkUrl,
       category: category,
+      rewardStars: rewardStars,
     );
     final updated = [...state, newItem];
     state = updated;

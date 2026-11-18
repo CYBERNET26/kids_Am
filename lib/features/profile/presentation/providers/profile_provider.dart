@@ -77,6 +77,14 @@ class ChildProfileNotifier extends Notifier<ChildProfile> {
     _saveToStorage(updated);
   }
 
+  void addStars(int count) {
+    if (count > 0) {
+      final updated = state.copyWith(totalStars: state.totalStars + count);
+      state = updated;
+      _saveToStorage(updated);
+    }
+  }
+
   bool deductStars(int amount) {
     if (state.totalStars >= amount) {
       final updated = state.copyWith(totalStars: state.totalStars - amount);

@@ -1,8 +1,11 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:confetti/confetti.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kids_am/core/constants/app_colors.dart';
 import 'package:kids_am/core/services/teacher_voice_service.dart';
+import 'package:kids_am/core/widgets/playful_background.dart';
 import 'package:kids_am/core/widgets/teacher_bubble_widget.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/games/domain/models/game_level.dart';
@@ -18,7 +21,12 @@ class ChessGameScreen extends ConsumerStatefulWidget {
 
 class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   static const int boardSize = 4;
+  static const int totalChessMissions = 100;
   late ConfettiController _confettiController;
+
+  int _missionNumber = 1; // 1 a 100
+  bool _hasGreetedThisVisit = false;
+
   int _pieceRow = 0;
   int _pieceCol = 0;
   int _targetRow = 3;
@@ -30,13 +38,30 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
   String _teacherSpeech = '';
   bool _isTip = false;
 
+  final List<String> _variedPrompts = [
+    '¡Siguiente misión táctica! Busca el mejor camino hacia la gema.',
+    '¡Nuevo reto en el tablero! ¿Qué casilla te acerca al objetivo?',
+    '¡A mover las piezas con estrategia! Llega a la gema dorada.',
+    '¡Excelente ritmo! Encuentra la jugada correcta para ganar.',
+    '¡Concentración! Mira las casillas verdes y planea tu avance.',
+  ];
+
   @override
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 2));
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _loadProgressAndStart();
+  }
+
+  Future<void> _loadProgressAndStart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedIndex = prefs.getInt('chess_mission_index') ?? 1;
+    if (mounted) {
+      setState(() {
+        _missionNumber = savedIndex.clamp(1, totalChessMissions);
+      });
       _initMission();
-    });
+    }
   }
 
   void _initMission() {
@@ -46,63 +71,71 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     _isAutoAdvancing = false;
     _isTip = false;
 
-    final level = profile.chessLevel;
-    switch (level) {
-      case 1:
-        _currentPieceType = ChessPieceType.rook;
-        _pieceRow = 0;
-        _pieceCol = 0;
-        _targetRow = 0;
-        _targetCol = 3;
-        _teacherSpeech = '¡Hola pequeño gran maestro! Esta es la Torre 🏰. Se mueve en línea recta. ¡Muévela hacia la gema dorada!';
-        break;
-      case 2:
-        _currentPieceType = ChessPieceType.rook;
-        _pieceRow = 0;
-        _pieceCol = 0;
-        _targetRow = 3;
-        _targetCol = 3;
-        _obstacles.add('0,2');
-        _teacherSpeech = '¡Cuidado! Hay una roca en el camino. Mueve tu Torre hacia abajo y luego hacia la gema.';
-        break;
-      case 3:
-        _currentPieceType = ChessPieceType.bishop;
-        _pieceRow = 0;
-        _pieceCol = 0;
-        _targetRow = 3;
-        _targetCol = 3;
-        _teacherSpeech = '¡Ahora aprenderemos con el Alfil 🧙‍♂️! El Alfil se desliza únicamente en diagonal como una X. ¡Alcanza la gema!';
-        break;
-      case 4:
-        _currentPieceType = ChessPieceType.knight;
-        _pieceRow = 0;
-        _pieceCol = 0;
-        _targetRow = 1;
-        _targetCol = 2;
-        _teacherSpeech = '¡Llegó el Caballo 🐴! El caballo da saltos mágicos en forma de letra L: dos pasos y uno al costado.';
-        break;
-      case 5:
-        _currentPieceType = ChessPieceType.knight;
-        _pieceRow = 0;
-        _pieceCol = 0;
-        _targetRow = 2;
-        _targetCol = 3;
-        _obstacles.add('1,1');
-        _teacherSpeech = '¡Misión avanzada de Caballo! Debes hacer dos saltos en L para rodear la montaña y capturar la gema.';
-        break;
-      default:
-        _currentPieceType = ChessPieceType.queen;
-        _pieceRow = 0;
-        _pieceCol = 1;
-        _targetRow = 3;
-        _targetCol = 2;
-        _obstacles.add('1,2');
-        _teacherSpeech = '¡La Reina 👑 es la pieza más poderosa! Puede moverse en línea recta como la Torre o en diagonal como el Alfil.';
-        break;
+    // Configuración determinista y rica de 100 misiones
+    // 1-25: Torre
+    // 26-50: Alfil
+    // 51-75: Caballo
+    // 76-100: Reina
+    final phase = (_missionNumber - 1) % 25;
+
+    if (_missionNumber <= 25) {
+      _currentPieceType = ChessPieceType.rook;
+      _pieceRow = (phase % 4);
+      _pieceCol = 0;
+      _targetRow = (_pieceRow + (phase % 2 == 0 ? 0 : 2)) % 4;
+      _targetCol = 3;
+      if (phase >= 8) _obstacles.add('$_pieceRow,2');
+      if (phase >= 16) _obstacles.add('${(_pieceRow + 1) % 4},1');
+    } else if (_missionNumber <= 50) {
+      _currentPieceType = ChessPieceType.bishop;
+      _pieceRow = phase % 2 == 0 ? 0 : 1;
+      _pieceCol = phase % 2 == 0 ? 0 : 1;
+      _targetRow = phase % 2 == 0 ? 3 : 2;
+      _targetCol = phase % 2 == 0 ? 3 : 2;
+      if (phase >= 10) _obstacles.add('1,2');
+      if (phase >= 18) _obstacles.add('2,1');
+    } else if (_missionNumber <= 75) {
+      _currentPieceType = ChessPieceType.knight;
+      _pieceRow = phase % 3;
+      _pieceCol = 0;
+      _targetRow = (phase % 2 == 0) ? 1 : 2;
+      _targetCol = (phase % 2 == 0) ? 2 : 3;
+      if (phase >= 10) _obstacles.add('1,1');
+      if (phase >= 18) _obstacles.add('2,2');
+    } else {
+      _currentPieceType = ChessPieceType.queen;
+      _pieceRow = (phase % 2);
+      _pieceCol = (phase % 3);
+      _targetRow = 3;
+      _targetCol = (phase % 4);
+      if (phase >= 6) _obstacles.add('1,2');
+      if (phase >= 14) _obstacles.add('2,1');
+    }
+
+    // Saludo solo en la primera misión de la visita
+    if (!_hasGreetedThisVisit) {
+      _hasGreetedThisVisit = true;
+      _teacherSpeech = '¡Hola ${profile.name}! Bienvenido al Mini-Ajedrez. Mueve ${_getPieceName()} hasta la gema dorada en la misión $_missionNumber.';
+    } else {
+      final rand = Random();
+      _teacherSpeech = _variedPrompts[rand.nextInt(_variedPrompts.length)];
     }
 
     TeacherVoiceService.instance.speak(_teacherSpeech);
     setState(() {});
+  }
+
+  String _getPieceName() {
+    switch (_currentPieceType) {
+      case ChessPieceType.rook:
+        return 'tu Torre 🏰';
+      case ChessPieceType.bishop:
+        return 'tu Alfil 🧙‍♂️';
+      case ChessPieceType.knight:
+        return 'tu Caballo 🐴';
+      case ChessPieceType.queen:
+        return 'tu Reina 👑';
+    }
   }
 
   bool _isBlocked(int toRow, int toCol) {
@@ -191,13 +224,17 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
 
         ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.chess);
 
-        // ESPERAR a que la maestra termine de hablar
-        await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
+        final nextMission = (_missionNumber < totalChessMissions) ? _missionNumber + 1 : 1;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('chess_mission_index', nextMission);
 
-        // Pausa adicional para ver la victoria
+        await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
         await Future.delayed(const Duration(milliseconds: 1000));
 
         if (mounted) {
+          setState(() {
+            _missionNumber = nextMission;
+          });
           _initMission();
         }
       } else {
@@ -211,16 +248,16 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         _isTip = true;
         switch (_currentPieceType) {
           case ChessPieceType.rook:
-            _teacherSpeech = 'La Torre solo puede caminar hacia adelante, atrás o a los lados. ¡Toca una casilla con punto verde!';
+            _teacherSpeech = 'La Torre solo puede caminar hacia adelante, atrás o a los lados en línea recta. ¡Toca un punto verde!';
             break;
           case ChessPieceType.bishop:
-            _teacherSpeech = 'El Alfil solo camina en diagonal por casillas del mismo color. ¡Mira los puntos verdes sugeridos!';
+            _teacherSpeech = 'El Alfil solo camina en diagonal por casillas del mismo color. ¡Mira las casillas con puntos verdes!';
             break;
           case ChessPieceType.knight:
-            _teacherSpeech = 'El caballo dibuja una letra L: dos casillas y dobla una. ¡Intenta tocar una de las casillas marcadas!';
+            _teacherSpeech = 'El caballo salta dibujando una L: dos casillas y dobla una. ¡Toca una casilla sugerida!';
             break;
           case ChessPieceType.queen:
-            _teacherSpeech = 'La reina puede ir recto o en diagonal, pero no puede atravesar rocas. ¡Busca un camino despejado!';
+            _teacherSpeech = 'La reina puede ir recto o en diagonal, pero sin atravesar rocas. ¡Busca un camino libre!';
             break;
         }
       });
@@ -253,111 +290,123 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     final profile = ref.watch(childProfileProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.softBackground,
       appBar: AppBar(
-        title: Text('Mini-Ajedrez (Nivel ${profile.chessLevel}/6)'),
+        title: Text('Mini-Ajedrez (Misión $_missionNumber de $totalChessMissions)'),
         backgroundColor: const Color(0xFF8E44AD),
         foregroundColor: Colors.white,
       ),
-      body: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-          ),
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Column(
-              children: [
-                // Globo de la Maestra Sofía
-                TeacherBubbleWidget(
-                  speechText: _teacherSpeech,
-                  isCelebration: _missionComplete,
-                  isTip: _isTip,
-                  onReplay: () => TeacherVoiceService.instance.speak(_teacherSpeech),
-                ),
+      body: PlayfulBackground(
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+            ),
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                children: [
+                  TeacherBubbleWidget(
+                    speechText: _teacherSpeech,
+                    isCelebration: _missionComplete,
+                    isTip: _isTip,
+                    onReplay: () => TeacherVoiceService.instance.speak(_teacherSpeech),
+                  ),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text(
-                          'Misión ${profile.chessLevel} de 6 🏆',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.purple.shade800,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.purple.withValues(alpha: 0.15),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
+                          ),
+                          child: Text(
+                            'Misión $_missionNumber de $totalChessMissions 🏆',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple.shade800,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.purple.withValues(alpha: 0.15),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.star_rounded, color: Colors.orange, size: 22),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${profile.totalStars}',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.star, color: Colors.orange, size: 22),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${profile.totalStars}',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                // Tablero 4x4 centrado donde todo queda dentro de cada casilla
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.brown.shade800, width: 4),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            )
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: boardSize,
-                            ),
-                            itemCount: boardSize * boardSize,
-                            itemBuilder: (context, index) {
-                              final row = index ~/ boardSize;
-                              final col = index % boardSize;
-                              final isLight = (row + col) % 2 == 0;
-                              final isPieceHere = row == _pieceRow && col == _pieceCol;
-                              final isTargetHere = row == _targetRow && col == _targetCol;
-                              final isObstacle = _obstacles.contains('$row,$col');
-                              final isValidTarget = _isValidMove(row, col);
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.brown.shade800, width: 4),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              )
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: GridView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: boardSize,
+                              ),
+                              itemCount: boardSize * boardSize,
+                              itemBuilder: (context, index) {
+                                final row = index ~/ boardSize;
+                                final col = index % boardSize;
+                                final isLight = (row + col) % 2 == 0;
+                                final isPieceHere = row == _pieceRow && col == _pieceCol;
+                                final isTargetHere = row == _targetRow && col == _targetCol;
+                                final isObstacle = _obstacles.contains('$row,$col');
+                                final isValidTarget = _isValidMove(row, col);
 
-                              return GestureDetector(
+                                return GestureDetector(
                                 onTap: () => _onTileTapped(row, col),
                                 child: Container(
                                   color: isLight ? const Color(0xFFF0D9B5) : const Color(0xFFB58863),
@@ -438,6 +487,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

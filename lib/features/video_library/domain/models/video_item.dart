@@ -9,6 +9,7 @@ class VideoItem {
   final String thumbnailUrl;
   final int durationSeconds;
   final String category;
+  final int rewardStars; // Estrellas que otorga al completarse (configurable)
 
   const VideoItem({
     required this.id,
@@ -19,6 +20,7 @@ class VideoItem {
     this.thumbnailUrl = '',
     this.durationSeconds = 0,
     this.category = 'General',
+    this.rewardStars = 3,
   });
 
   static String? extractYoutubeId(String url) {
@@ -67,6 +69,7 @@ class VideoItem {
       'thumbnailUrl': thumbnailUrl,
       'durationSeconds': durationSeconds,
       'category': category,
+      'rewardStars': rewardStars,
     };
   }
 
@@ -89,6 +92,7 @@ class VideoItem {
       thumbnailUrl: map['thumbnailUrl'] as String? ?? '',
       durationSeconds: map['durationSeconds'] as int? ?? 0,
       category: map['category'] as String? ?? 'General',
+      rewardStars: map['rewardStars'] as int? ?? 3,
     );
   }
 }

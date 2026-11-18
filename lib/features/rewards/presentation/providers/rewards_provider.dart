@@ -90,6 +90,28 @@ class RewardsNotifier extends Notifier<List<RewardItem>> {
     _saveToStorage(updated);
   }
 
+  void updateReward({
+    required String id,
+    required String title,
+    required int costStars,
+    required String icon,
+    required String description,
+  }) {
+    final updated = state.map((item) {
+      if (item.id == id) {
+        return item.copyWith(
+          title: title,
+          costStars: costStars,
+          icon: icon,
+          description: description,
+        );
+      }
+      return item;
+    }).toList();
+    state = updated;
+    _saveToStorage(updated);
+  }
+
   void removeReward(String id) {
     final updated = state.where((item) => item.id != id).toList();
     state = updated;

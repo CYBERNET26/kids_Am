@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kids_am/core/constants/app_colors.dart';
 import 'package:kids_am/core/services/teacher_voice_service.dart';
+import 'package:kids_am/core/widgets/playful_background.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/rewards/presentation/widgets/rewards_shop_dialog.dart';
 
@@ -39,9 +40,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
     final profile = ref.watch(childProfileProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.softBackground,
-      body: SafeArea(
-        child: Column(
+      body: PlayfulBackground(
+        child: SafeArea(
+          child: Column(
           children: [
             // Header con Perfil, Estrellas / Tienda y botón de Padres
             Padding(
@@ -212,8 +213,9 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _WorldCard extends StatelessWidget {

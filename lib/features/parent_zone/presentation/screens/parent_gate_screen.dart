@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kids_am/core/constants/app_colors.dart';
 import 'package:kids_am/core/services/teacher_voice_service.dart';
+import 'package:kids_am/core/widgets/playful_background.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/video_library/presentation/providers/video_library_provider.dart';
+import 'package:kids_am/features/rewards/domain/models/reward_item.dart';
 import 'package:kids_am/features/rewards/presentation/providers/rewards_provider.dart';
 
 class ParentGateScreen extends StatefulWidget {
@@ -152,33 +154,34 @@ class _ParentGateScreenState extends State<ParentGateScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.softBackground,
       appBar: AppBar(
         title: const Text('Zona Exclusiva para Padres'),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textDark,
         elevation: 0,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 440),
-            padding: const EdgeInsets.all(28.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                )
-              ],
+      body: PlayfulBackground(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 440),
+              padding: const EdgeInsets.all(28.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  )
+                ],
+              ),
+              child: _isRecovering
+                  ? _buildRecoveryView()
+                  : (_hasAccount ? _buildLoginView() : _buildCreateAccountView()),
             ),
-            child: _isRecovering
-                ? _buildRecoveryView()
-                : (_hasAccount ? _buildLoginView() : _buildCreateAccountView()),
           ),
         ),
       ),
@@ -199,7 +202,7 @@ class _ParentGateScreenState extends State<ParentGateScreen> {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Crea tu contraseña de acceso para administrar videos educativos, premios y el nombre del niño.',
+          'Crea tu contraseña de acceso para administrar videos, premios y el nombre del niño.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, color: AppColors.textMuted),
         ),
@@ -392,12 +395,11 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   late TabController _tabController;
   final _videoTitleController = TextEditingController();
   final _videoUrlController = TextEditingController();
+  final _videoStarsController = TextEditingController(text: '3');
   String _selectedCategory = 'Matemáticas';
 
-  // Controlador de nombre del niño
   late TextEditingController _childNameController;
 
-  // Controladores de Premios
   final _rewardTitleController = TextEditingController();
   final _rewardStarsController = TextEditingController(text: '10');
   final _rewardDescController = TextEditingController();
@@ -427,6 +429,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     _tabController.dispose();
     _videoTitleController.dispose();
     _videoUrlController.dispose();
+    _videoStarsController.dispose();
     _childNameController.dispose();
     _rewardTitleController.dispose();
     _rewardStarsController.dispose();
@@ -435,6 +438,11 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   }
 
   void _showAddRewardDialog() {
+    _rewardTitleController.clear();
+    _rewardStarsController.text = '10';
+    _rewardDescController.clear();
+    _selectedRewardIcon = '🎁';
+
     showDialog(
       context: context,
       builder: (ctx) {
@@ -457,7 +465,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Define el premio y la cantidad de estrellas necesarias para que tu hijo/a pueda canjearlo.',
+                      'Define el premio y cuántas estrellas necesita el niño para canjearlo.',
                       style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 16),
@@ -485,7 +493,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                       controller: _rewardDescController,
                       decoration: InputDecoration(
                         labelText: 'Detalles o condición (opcional)',
-                        hintText: 'Ej: Elige 2 bochas de helado',
+                        hintText: 'Ej: Elige tu sabor preferido',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
@@ -541,8 +549,6 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                             icon: _selectedRewardIcon,
                             description: _rewardDescController.text.trim(),
                           );
-                      _rewardTitleController.clear();
-                      _rewardDescController.clear();
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('¡Premio creado con éxito!')),
@@ -559,7 +565,132 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
     );
   }
 
+  void _showEditRewardDialog(RewardItem reward) {
+    _rewardTitleController.text = reward.title;
+    _rewardStarsController.text = reward.costStars.toString();
+    _rewardDescController.text = reward.description;
+    _selectedRewardIcon = reward.icon;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final icons = ['🎁', '🍦', '🍕', '🎠', '🍿', '🎮', '🎨', '⚽️', '🚴', '🛹', '🍫'];
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Row(
+                children: [
+                  Icon(Icons.edit_rounded, color: AppColors.primaryBlue),
+                  SizedBox(width: 8),
+                  Text('Modificar Premio'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _rewardTitleController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre del premio',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _rewardStarsController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Costo en Estrellas ⭐',
+                        prefixIcon: const Icon(Icons.star_rounded, color: Colors.orange),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _rewardDescController,
+                      decoration: InputDecoration(
+                        labelText: 'Detalles o condición (opcional)',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Icono:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: icons.map((icon) {
+                        final isSelected = _selectedRewardIcon == icon;
+                        return InkWell(
+                          onTap: () => setDialogState(() => _selectedRewardIcon = icon),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.sunnyYellow.withValues(alpha: 0.5)
+                                  : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? Colors.orange : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(icon, style: const TextStyle(fontSize: 24)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.playfulGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    final title = _rewardTitleController.text.trim();
+                    final stars = int.tryParse(_rewardStarsController.text.trim()) ?? 10;
+                    if (title.isNotEmpty && stars > 0) {
+                      ref.read(rewardsProvider.notifier).updateReward(
+                            id: reward.id,
+                            title: title,
+                            costStars: stars,
+                            icon: _selectedRewardIcon,
+                            description: _rewardDescController.text.trim(),
+                          );
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('¡Premio modificado con éxito!')),
+                      );
+                    }
+                  },
+                  child: const Text('Guardar Cambios'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showAddVideoDialog() {
+    _videoTitleController.clear();
+    _videoUrlController.clear();
+    _videoStarsController.text = '3';
+
     showDialog(
       context: context,
       builder: (ctx) {
@@ -583,7 +714,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Pega cualquier enlace de YouTube o video directo (MP4). ¡Se reproducirá de forma segura dentro de Kids Am!',
+                      'Pega cualquier enlace de YouTube o video directo (MP4). Asigna cuántas estrellas ganará el niño por verlo completo.',
                       style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 16),
@@ -609,6 +740,17 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _videoStarsController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Estrellas al ver el video completo ⭐',
+                        hintText: 'Ej: 3, 5',
+                        prefixIcon: const Icon(Icons.star_rounded, color: Colors.orange),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
                     if (isYoutube) ...[
                       const SizedBox(height: 8),
                       Container(
@@ -623,7 +765,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                             SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                'Detectado enlace de YouTube. Se reproducirá sin anuncios en la app.',
+                                'Detectado enlace de YouTube. Se reproducirá seguro en la app.',
                                 style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
                               ),
                             ),
@@ -667,14 +809,14 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                   onPressed: () {
                     final title = _videoTitleController.text.trim();
                     final url = _videoUrlController.text.trim();
+                    final stars = int.tryParse(_videoStarsController.text.trim()) ?? 3;
                     if (title.isNotEmpty && url.isNotEmpty) {
                       ref.read(videoLibraryProvider.notifier).addVideo(
                             title: title,
                             url: url,
                             category: _selectedCategory,
+                            rewardStars: stars,
                           );
-                      _videoTitleController.clear();
-                      _videoUrlController.clear();
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('¡Video educativo añadido con éxito!')),
@@ -694,7 +836,6 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.softBackground,
       appBar: AppBar(
         title: const Text('Panel de Control Parental 🛡️'),
         backgroundColor: Colors.white,
@@ -715,14 +856,16 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildVideosTab(),
-          _buildRewardsTab(),
-          _buildProfileTab(),
-          _buildSettingsTab(),
-        ],
+      body: PlayfulBackground(
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildVideosTab(),
+            _buildRewardsTab(),
+            _buildProfileTab(),
+            _buildSettingsTab(),
+          ],
+        ),
       ),
     );
   }
@@ -776,7 +919,7 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                           ),
                         ),
                         title: Text(video.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('${video.category} • ${video.isYoutube ? "YouTube" : "Directo"}'),
+                        subtitle: Text('${video.category} • ⭐ +${video.rewardStars} estrellas • ${video.isYoutube ? "YouTube" : "Directo"}'),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.red),
                           tooltip: 'Eliminar video',
@@ -858,6 +1001,11 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                                 ),
                               ),
                             IconButton(
+                              icon: const Icon(Icons.edit_outlined, color: AppColors.primaryBlue),
+                              tooltip: 'Modificar premio',
+                              onPressed: () => _showEditRewardDialog(reward),
+                            ),
+                            IconButton(
                               icon: const Icon(Icons.delete_outline, color: Colors.red),
                               tooltip: 'Eliminar premio',
                               onPressed: () {
@@ -883,7 +1031,6 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tarjeta de Edición de Nombre del Niño
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Padding(
@@ -941,7 +1088,6 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
 
           const SizedBox(height: 16),
 
-          // Resumen de Estrellas
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Padding(
