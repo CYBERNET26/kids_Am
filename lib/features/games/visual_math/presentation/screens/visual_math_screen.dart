@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:confetti/confetti.dart';
 import 'package:kids_am/core/constants/app_colors.dart';
+import 'package:kids_am/core/services/teacher_voice_service.dart';
+import 'package:kids_am/core/widgets/teacher_bubble_widget.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/games/domain/models/game_level.dart';
 
@@ -22,15 +24,20 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
   late List<int> _options;
   int? _selectedAnswer;
   bool? _isCorrect;
+  String _teacherSpeech = '';
+  bool _isTip = false;
+  bool _isAutoAdvancing = false;
 
-  final List<String> _emojis = ['🍎', '⭐️', '🚗', '🐱', '🚀', '🍓', '🎈'];
+  final List<String> _emojis = ['🍎', '⭐️', '🚗', '🐱', '🚀', '🍓', '🎈', '🐶', '⚽️', '🍦'];
   late String _currentEmoji;
 
   @override
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 2));
-    _generateProblem();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _generateProblem();
+    });
   }
 
   void _generateProblem() {
@@ -39,43 +46,92 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     _currentEmoji = _emojis[random.nextInt(_emojis.length)];
     _selectedAnswer = null;
     _isCorrect = null;
+    _isTip = false;
+    _isAutoAdvancing = false;
 
-    // Dificultad basada en el nivel de matemáticas
-    final maxNum = (profile.mathLevel * 3).clamp(3, 10);
-    _firstGroup = random.nextInt(maxNum) + 1;
-    
-    // Nivel 1: solo sumas pequeñas. Niveles superiores pueden tener restas amigables
-    _isAddition = profile.mathLevel == 1 || random.nextBool();
+    // Progresión en 10 Niveles
+    // Niveles 1-2: Conteo y sumas pequeñas (1 a 5)
+    // Niveles 3-5: Sumas y restas hasta 10
+    // Niveles 6-8: Operaciones combinadas hasta 15
+    // Niveles 9-10: Desafíos hasta 20
+    final level = profile.mathLevel;
+    int maxGroup;
+    if (level <= 2) {
+      maxGroup = 4;
+      _isAddition = true;
+    } else if (level <= 4) {
+      maxGroup = 6;
+      _isAddition = random.nextBool();
+    } else if (level <= 7) {
+      maxGroup = 8;
+      _isAddition = random.nextBool();
+    } else {
+      maxGroup = 10;
+      _isAddition = random.nextBool();
+    }
+
+    _firstGroup = random.nextInt(maxGroup) + 1;
 
     if (_isAddition) {
-      _secondGroup = random.nextInt(maxNum) + 1;
+      _secondGroup = random.nextInt(maxGroup) + 1;
       _correctResult = _firstGroup + _secondGroup;
     } else {
       _secondGroup = random.nextInt(_firstGroup) + 1;
       _correctResult = _firstGroup - _secondGroup;
     }
 
-    // Generar 3 opciones (una correcta y dos distracciones cercanas)
+    // 3 opciones atractivas
     final Set<int> optionSet = {_correctResult};
     while (optionSet.length < 3) {
       final offset = random.nextBool() ? 1 : -1;
-      final distractor = (_correctResult + offset * (random.nextInt(3) + 1)).clamp(0, 20);
+      final distractor = (_correctResult + offset * (random.nextInt(3) + 1)).clamp(0, 30);
       optionSet.add(distractor);
     }
     _options = optionSet.toList()..shuffle();
+
+    // Explicación de la maestra inicial
+    if (_isAddition) {
+      _teacherSpeech = '¡Hola! Vamos a sumar: aquí tenemos $_firstGroup y agregamos $_secondGroup. ¿Cuántos hay en total?';
+    } else {
+      _teacherSpeech = '¡Aventura de restar! Teníamos $_firstGroup y quitamos $_secondGroup. ¿Cuántos nos quedan?';
+    }
+
+    TeacherVoiceService.instance.speak(_teacherSpeech);
+    setState(() {});
   }
 
   void _checkAnswer(int answer) {
-    if (_isCorrect != null) return;
+    if (_isCorrect == true || _isAutoAdvancing) return;
 
     setState(() {
       _selectedAnswer = answer;
       if (answer == _correctResult) {
         _isCorrect = true;
+        _isTip = false;
+        _isAutoAdvancing = true;
         _confettiController.play();
+
+        _teacherSpeech = '¡Maravilloso! $_firstGroup ${_isAddition ? "más" : "menos"} $_secondGroup es igual a $_correctResult. ¡Ganaste una estrella! Pasemos al siguiente.';
+        TeacherVoiceService.instance.speak(_teacherSpeech);
+
         ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.visualMath);
+
+        // Pasar automáticamente al siguiente ejercicio tras festejo
+        Future.delayed(const Duration(milliseconds: 2200), () {
+          if (mounted) {
+            _generateProblem();
+          }
+        });
       } else {
-        _isCorrect = false; // Refuerzo positivo: sin penalizaciones frustrantes
+        _isCorrect = false;
+        _isTip = true;
+        // Explicación pedagógica alternativa y distinta a la primera
+        if (_isAddition) {
+          _teacherSpeech = '¡Casi lo logras! Mira con atención: cuenta primero los $_firstGroup de arriba y sigue contando uno a uno los $_secondGroup de abajo. ¡Intenta de nuevo!';
+        } else {
+          _teacherSpeech = '¡Ánimo! Imagina que tienes $_firstGroup caramelos y te comes $_secondGroup. Cuenta los que quedan sueltos.';
+        }
+        TeacherVoiceService.instance.speak(_teacherSpeech);
       }
     });
   }
@@ -83,6 +139,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
   @override
   void dispose() {
     _confettiController.dispose();
+    TeacherVoiceService.instance.stop();
     super.dispose();
   }
 
@@ -91,8 +148,9 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     final profile = ref.watch(childProfileProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.softBackground,
       appBar: AppBar(
-        title: Text('Mundo Matemático (Nivel ${profile.mathLevel})'),
+        title: Text('Mundo Matemático (Nivel ${profile.mathLevel}/10)'),
         backgroundColor: const Color(0xFFFF9233),
         foregroundColor: Colors.white,
       ),
@@ -106,86 +164,106 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
             colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple],
           ),
           SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.only(bottom: 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Barra de progreso y refuerzo
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                // Globo de la Profe Sofía con Voz
+                TeacherBubbleWidget(
+                  speechText: _teacherSpeech,
+                  isCelebration: _isCorrect == true,
+                  isTip: _isTip,
+                  onReplay: () => TeacherVoiceService.instance.speak(_teacherSpeech),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '¡Cuenta los objetos!',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade800,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          'Nivel ${profile.mathLevel} de 10 🚀',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange.shade800,
+                          ),
                         ),
                       ),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.orange, size: 24),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${profile.totalStars}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.orange, size: 22),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${profile.totalStars}',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+
+                const SizedBox(height: 10),
 
                 // Visualizador de figuras grupales
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: List.generate(
-                            _firstGroup,
-                            (i) => Text(_currentEmoji, style: const TextStyle(fontSize: 42)),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            _isAddition ? '+' : '−',
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.primaryBlue,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: List.generate(
+                              _firstGroup,
+                              (i) => Text(_currentEmoji, style: const TextStyle(fontSize: 38)),
                             ),
                           ),
-                        ),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: List.generate(
-                            _secondGroup,
-                            (i) => Text(_currentEmoji, style: const TextStyle(fontSize: 42)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Text(
+                              _isAddition ? '+' : '−',
+                              style: const TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            children: List.generate(
+                              _secondGroup,
+                              (i) => Text(_currentEmoji, style: const TextStyle(fontSize: 38)),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 // Expresión numérica
                 Text(
@@ -197,87 +275,90 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
 
-                // Opciones de respuesta amigables
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: _options.map((option) {
-                    final isThisSelected = _selectedAnswer == option;
-                    Color btnColor = AppColors.sunnyYellow;
-                    if (isThisSelected) {
-                      btnColor = (_isCorrect ?? false) ? AppColors.playfulGreen : Colors.orange.shade300;
-                    }
+                // Opciones táctiles para responder
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: _options.map((option) {
+                      final isSelected = _selectedAnswer == option;
+                      final isAnswerCorrect = option == _correctResult;
 
-                    return SizedBox(
-                      width: 90,
-                      height: 90,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: btnColor,
-                          foregroundColor: AppColors.textDark,
-                          shape: RoundedRectangleBorder(
+                      Color btnColor = Colors.white;
+                      Color txtColor = AppColors.textDark;
+
+                      if (isSelected) {
+                        if (_isCorrect == true) {
+                          btnColor = AppColors.playfulGreen;
+                          txtColor = Colors.white;
+                        } else {
+                          btnColor = Colors.orange.shade300;
+                          txtColor = Colors.white;
+                        }
+                      } else if (_isCorrect == true && isAnswerCorrect) {
+                        btnColor = AppColors.playfulGreen.withValues(alpha: 0.3);
+                      }
+
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: InkWell(
+                            onTap: () => _checkAnswer(option),
                             borderRadius: BorderRadius.circular(20),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: btnColor,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected ? Colors.transparent : Colors.grey.shade300,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$option',
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: txtColor,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                          elevation: 5,
                         ),
-                        onPressed: () => _checkAnswer(option),
-                        child: Text(
-                          '$option',
-                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
 
-                const SizedBox(height: 30),
-
-                // Mensajes de retroalimentación constructiva
-                if (_isCorrect == true) ...[
-                  const Text(
-                    '🎉 ¡Excelente trabajo! ¡Ganaste una estrella! ⭐',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.playfulGreen,
-                    ),
-                  ),
+                if (_isAutoAdvancing) ...[
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.playfulGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _generateProblem();
-                      });
-                    },
-                    icon: const Icon(Icons.arrow_forward),
-                    label: const Text('Siguiente Reto', style: TextStyle(fontSize: 18)),
-                  ),
-                ] else if (_isCorrect == false) ...[
-                  const Text(
-                    '💡 ¡Casi lo logras! Intenta contar los objetos uno a uno con tu dedito.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedAnswer = null;
-                        _isCorrect = null;
-                      });
-                    },
-                    child: const Text('Intentar de nuevo', style: TextStyle(fontSize: 16)),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, color: AppColors.playfulGreen, size: 24),
+                      SizedBox(width: 8),
+                      Text(
+                        '¡Excelente! Pasando al siguiente ejercicio...',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.playfulGreen,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -288,4 +369,3 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     );
   }
 }
-
