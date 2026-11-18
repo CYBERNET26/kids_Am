@@ -25,133 +25,133 @@ final List<VideoItem> defaultEducationalVideos = [
   // --- VIDEO 1 ---
   const VideoItem(
     id: 'vid_default_01',
-    title: 'Aprende los Números del 1 al 10 🎵',
-    description: 'Canción didáctica y alegre para contar con animalitos',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=pSqkWk_Q_i4',
+    title: 'Necesidades, derechos y lucha de flamencos | Tuttle Twins en Español | T2E1',
+    description: 'Cuando una excursión sale mal, los mellizos se preguntan si las necesidades son realmente derechos. Aprenden acerca de los derechos naturales de John Locke y luchan por sus vidas en una isla de feroces flamencos.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=iY1r7U3jVFY&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=3',
     sourceType: VideoSourceType.youtube,
-    category: 'Matemáticas',
+    category: 'Educación Económica',
     rewardStars: 3,
   ),
 
   // --- VIDEO 2 ---
   const VideoItem(
     id: 'vid_default_02',
-    title: 'Las Figuras Geométricas Divertidas 🔺🔵',
-    description: 'Círculo, cuadrado, triángulo y rectángulo para niños',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=65wZuz-8u-k',
+    title: 'No deseches el éxito | Tuttle Twins en Español | T2E2',
+    description: 'Cuando los mellizos triunfan con un negocio de limpieza de botes de basura, Karinne les hace cuestionar si el éxito es egoísta. ¡Aprenden sobre el verdadero emprendimiento de Joyce Chen y los gruñones gruñodons de Gruñolandia!',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=zHRVP3o3we4&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=1',
     sourceType: VideoSourceType.youtube,
-    category: 'Geometría',
+    category: 'Educación Económica',
     rewardStars: 3,
   ),
 
   // --- VIDEO 3 ---
   const VideoItem(
     id: 'vid_default_03',
-    title: 'Ajedrez para Niños: ¿Cómo se mueve la Torre y el Caballo? 🏰',
-    description: 'Cuento interactivo para aprender las piezas de ajedrez',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=kYJv8Z1kZ50',
+    title: 'Bitcoin y la Bestia | Tuttle Twins en Español | T2E3 ',
+    description: '¡Sagrado Satoshi! Cuando los mellizos se ven obligados a elegir entre aceptar dólares y Bitcoin en una venta de garaje, viajan por el internet y un videojuego retro para aprender qué es lo que hace que el dinero sea bueno.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=Y_1VUGEUT-c&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=5',
     sourceType: VideoSourceType.youtube,
-    category: 'Ajedrez',
-    rewardStars: 4,
+    category: 'Educación Económica',
+    rewardStars: 3,
   ),
 
   // --- VIDEO 4 ---
   const VideoItem(
     id: 'vid_default_04',
-    title: 'Ajedrez para Niños: El Rey y la Dama 👑',
-    description: 'Aprende los secretos y movimientos del Rey y la Reina',
+    title: 'Piensa fuera del corral | Tuttle Twins en Español | T2E4',
+    description: 'Después de que su equipo de softbol comienza a romper las reglas, los mellizos saltan a través de famosos cuadros, conocen a George Washington e intentan salvar una granja dividida de un lobo feroz y el peligroso tribalismo.',
     urlOrAssetPath: 'https://www.youtube.com/watch?v=d_Z89M5L1n8',
     sourceType: VideoSourceType.youtube,
-    category: 'Ajedrez',
-    rewardStars: 4,
+    category: 'Educación Económica',
+    rewardStars: 3,
   ),
 
   // --- VIDEO 5 ---
   const VideoItem(
     id: 'vid_default_05',
-    title: 'Aprende a Sumar de Manera Fácil y Divertida ➕',
-    description: 'Explicación sencilla de sumas para niños de primaria',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=o0d428P3QvQ',
+    title: 'Un T-Rex e ideas enredadas | Tuttle Twins en Español | T2E5 |',
+    description: 'Después de que un T-rex destruye su casa del árbol, los mellizos luchan por salvar el reino agobiado de Rapunzel y descubren que las buenas ideas pueden provenir de personas imperfectas.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=SiPLOceTvOs&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=7',
     sourceType: VideoSourceType.youtube,
-    category: 'Matemáticas',
+    category: 'Educación Económica',
     rewardStars: 3,
   ),
 
   // --- VIDEO 6 ---
   const VideoItem(
     id: 'vid_default_06',
-    title: 'Aprende a Restar con Manzanas y Juguetes ➖',
-    description: 'Resta fácil y didáctica con ejemplos visuales',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=42vjqtleG9E',
+    title: 'La incy wincy mentalidad de víctima | Tuttle Twins en Español | T2E6',
+    description: 'Cuando los mellizos son injustamente eliminados de un show de talentos, la abuela los lleva a conocer a Frederick Douglass y a una pequeñísima araña para aprender cómo superar la mentalidad de víctima.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=cHHefhoTuXs&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=4',
     sourceType: VideoSourceType.youtube,
-    category: 'Matemáticas',
+    category: 'Educación Económica',
     rewardStars: 3,
   ),
 
   // --- VIDEO 7 ---
   const VideoItem(
     id: 'vid_default_07',
-    title: 'La Canción de la Tabla del 2 y del 3 ✖️',
-    description: 'Música alegre para memorizar las primeras multiplicaciones',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=ecSXX971eL0',
+    title: 'Criaturas del mar y planificación central | Tuttle Twins en Español | T2E7',
+    description: 'En medio de las peculiaridades del programa escolar, la abuela presenta a los gemelos al economista Fredrick Hayek. Se desata el caos de la planificación central, pero una reina sirena sabe exactamente cómo ayudar a Ethan y Emily a solucionarlo.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=o1yjkrx65-g&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=2',
     sourceType: VideoSourceType.youtube,
-    category: 'Matemáticas',
-    rewardStars: 5,
+    category: 'Educación Económica',
+    rewardStars: 3,
   ),
 
   // --- VIDEO 8 ---
   const VideoItem(
     id: 'vid_default_08',
-    title: '¿Qué es la Multiplicación? Para Niños de 7 a 9 años 🧠',
-    description: 'Entiende cómo multiplicar sumando grupos iguales',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=YFtEaVw5k1A',
+    title: 'Sustos con sucios subsidios | Tuttle Twins en Español | T2E8',
+    description: 'Cuando el negocio de los mellizos se ve perjudicado por un subsidio, visitan a Ludwig Von Mises y aterrizan en un lugar espeluznante donde aprenden cuán desagradable puede llegar a ser el mercado',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=6BEDSpKZWiY&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=12',
     sourceType: VideoSourceType.youtube,
-    category: 'Matemáticas',
-    rewardStars: 4,
+    category: 'Educación Económica',
+    rewardStars: 3,
   ),
 
   // --- VIDEO 9 ---
   const VideoItem(
     id: 'vid_default_09',
-    title: 'Aprende a Dividir: Repartir entre Amigos ➗',
-    description: 'Explicación clara de la división exacta para niños',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=iA0fP4tLg7M',
+    title: 'Luchando con el socialismo | Tuttle Twins en Español | T2E9 ',
+    description: '¡LUCHA! Después de una recaudación de fondos fallida para el club de niños, la banda se encuentra con William Bradford, los peregrinos y Karl Marx mientras luchan con el socialismo y sus consecuencias.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=NTUHbVYnLjI&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=10',
     sourceType: VideoSourceType.youtube,
-    category: 'Matemáticas',
-    rewardStars: 5,
+    category: 'Educación Económica',
+    rewardStars: 3,
   ),
 
   // --- VIDEO 10 ---
   const VideoItem(
     id: 'vid_default_10',
-    title: 'El Sistema Solar y los Planetas para Niños 🪐🚀',
-    description: 'Viaje espacial por el sol, la luna y los 8 planetas',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=ZykXgSqet6A',
+    title: 'La jungla de la educación | Tuttle Twins en Español | T2E10 ',
+    description: 'Después de que Emily reprueba un examen, los mellizos se preguntan si la escuela es la mejor manera de aprender, lo que provoca que la abuela los lleve a un lugar familiar en el pasado, antes de pasar por la mente más famosa de la historia y luego un estruendo en la jungla.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=Y1RIJKi-ZpI&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=6',
     sourceType: VideoSourceType.youtube,
     category: 'Ciencias',
-    rewardStars: 4,
+    rewardStars: 3,
   ),
 
   // --- VIDEO 11 ---
   const VideoItem(
     id: 'vid_default_11',
-    title: 'Los Animales Vertebrados e Invertebrados 🦁🐟',
-    description: 'Descubre los mamíferos, aves, peces y reptiles',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=uQO5FF5eX9g',
+    title: 'Secuestradores y Capitalismo | Tuttle Twins en Español | T2E11',
+    description: 'Invasores de otro mundo secuestran a Derek, lanzando a la abuela y a los mellizos en una peligrosa misión de rescate. En un planeta sombrío, los mellizos encuentran pistas misteriosas, cyborgs y dispositivos de espionaje mientras solucionan el misterio de por qué el capitalismo está fallando.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=Hl6hZmzKDag&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=11',
     sourceType: VideoSourceType.youtube,
-    category: 'Ciencias',
+    category: 'Educación Económica',
     rewardStars: 3,
   ),
 
   // --- VIDEO 12 ---
   const VideoItem(
     id: 'vid_default_12',
-    title: 'Cuento de Ajedrez: El Peón Valiente ♟️',
-    description: 'Historia motivacional sobre cómo el peón puede convertirse en dama',
-    urlOrAssetPath: 'https://www.youtube.com/watch?v=1xWq7Pz0Qv0',
+    title: 'Desastre de dinero | Tuttle Twins en Español | T2E12',
+    description: 'Es la época de Navidad, y cuando los mellizos discuten sobre ahorrar dinero versus gastarlo, la abuela les presenta un juego de mesa que desata criaturas y caos en la casa de los Tuttle.',
+    urlOrAssetPath: 'https://www.youtube.com/watch?v=TRd3NhuW6gM&list=PLOe_XajSj1xiCOyhnf74R0ELDV0D0SWSn&index=8',
     sourceType: VideoSourceType.youtube,
-    category: 'Ajedrez',
-    rewardStars: 4,
+    category: 'Educación Económica',
+    rewardStars: 3,
   ),
 
   // --------------------------------------------------------------------------
