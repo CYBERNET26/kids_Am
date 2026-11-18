@@ -1,9 +1,9 @@
 {
-  "version": "1.0.5",
-  "versionCode": 6,
-  "title": "Kids Am v1.0.5 - Tutor Inteligente Híbrido Offline-First y Modo Clásico",
+  "version": "1.0.6",
+  "versionCode": 7,
+  "title": "Kids Am v1.0.6 - Validador Mejorado de API Key y Botón de Pegar",
   "releaseDate": "2026-11-18",
-  "changelog": "### 🚀 Novedades y Agregados:\n• Arquitectura de Tutor Híbrido: Soporte de dos modos: Modo Clásico (100% offline sin IA) y Modo Tutor Inteligente (con API Key personal del padre para explicaciones adaptadas a niños de 6 años).\n• Aislamiento Total de Datos y Progreso: El progreso, estrellas y niveles son 100% agnósticos a la IA y nunca se pierden aunque se desactive la IA o se pierda internet.\n• Capa de Audio Híbrida con Fallback Instantáneo: Si la conexión a la IA demora más de 2.5s o falla la red, el sistema recurre al instante a las explicaciones locales sin interrumpir al niño.\n• Panel Parental con Switch y Tutorial: Diálogo instructivo para obtener y configurar la API Key de Gemini de forma segura.\n• Integración completa en Matemáticas, Rompecabezas Montessori, Ajedrez y Cuentos.",
-  "apkFileName": "KidsAm-installer-v1.0.5.apk",
-  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.5.apk"
+  "changelog": "### 🚀 Novedades y Agregados:\n• Validador Inteligente de Clave de Gemini: Diagnóstico detallado contra Google AI Studio con soporte para todas las versiones de API y modelos (Gemini 1.5 Flash y Gemini 2.0 Flash).\n• Limpieza Automática de Caracteres: Sanitización instantánea que elimina espacios invisibles, comillas o saltos de línea al copiar la clave.\n• Botón de Pegar Rápido: Pega tu clave directamente desde el portapapeles con un solo toque en el Panel Parental.\n• Mensajes de Diagnóstico Claros: Avisos explícitos si la clave es errónea, si falta conexión o si fue activada con éxito.",
+  "apkFileName": "KidsAm-installer-v1.0.6.apk",
+  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.6.apk"
 }

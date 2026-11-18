@@ -16,6 +16,8 @@ import 'package:kids_am/features/parent_zone/presentation/providers/background_s
 import 'package:kids_am/features/parent_zone/presentation/widgets/background_customizer_dialog.dart';
 import 'package:kids_am/features/stories/presentation/providers/stories_provider.dart';
 import 'package:kids_am/features/updater/presentation/providers/update_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:kids_am/features/tutor/data/services/gemini_ai_tutor_service.dart';
 import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
 import 'package:kids_am/features/tutor/presentation/widgets/ai_key_help_dialog.dart';
 
@@ -472,20 +474,28 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
 
   Future<void> _testApiKey() async {
     final messenger = ScaffoldMessenger.of(context);
-    final key = _apiKeyController.text.trim();
-    if (key.isEmpty) {
+    final rawKey = _apiKeyController.text;
+    final clean = GeminiAITutorService.cleanKey(rawKey);
+
+    if (clean.isEmpty) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Escribe o pega tu clave de Gemini.')),
+        const SnackBar(
+          content: Text('Escribe o pega tu clave de Gemini.'),
+          duration: Duration(seconds: 4),
+        ),
       );
       return;
     }
-    final ok = await ref.read(tutorProvider.notifier).testApiKey(key);
+
+    _apiKeyController.text = clean;
+    final ok = await ref.read(tutorProvider.notifier).testApiKey(clean);
     if (!mounted) return;
     final msg = ref.read(tutorProvider).validationMessage;
     messenger.showSnackBar(
       SnackBar(
         content: Text(msg ?? (ok ? '¡Clave validada con éxito!' : 'Error de validación')),
-        backgroundColor: ok ? Colors.green : Colors.red,
+        backgroundColor: ok ? Colors.green.shade700 : Colors.red.shade700,
+        duration: const Duration(seconds: 6),
       ),
     );
   }
@@ -1951,9 +1961,27 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                             decoration: InputDecoration(
                               hintText: 'Pega tu clave aquí (empieza con AIzaSy...)',
                               prefixIcon: const Icon(Icons.key_rounded, color: Colors.purple),
-                              suffixIcon: IconButton(
-                                icon: Icon(_obscureApiKey ? Icons.visibility_off : Icons.visibility),
-                                onPressed: () => setState(() => _obscureApiKey = !_obscureApiKey),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.paste_rounded, color: Colors.purple),
+                                    tooltip: 'Pegar desde el portapapeles',
+                                    onPressed: () async {
+                                      final data = await Clipboard.getData(Clipboard.kTextPlain);
+                                      if (data != null && data.text != null) {
+                                        final clean = GeminiAITutorService.cleanKey(data.text!);
+                                        setState(() {
+                                          _apiKeyController.text = clean;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(_obscureApiKey ? Icons.visibility_off : Icons.visibility),
+                                    onPressed: () => setState(() => _obscureApiKey = !_obscureApiKey),
+                                  ),
+                                ],
                               ),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                             ),

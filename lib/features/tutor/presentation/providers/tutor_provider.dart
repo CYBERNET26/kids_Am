@@ -70,7 +70,7 @@ class TutorSettingsNotifier extends Notifier<TutorSettingsState> {
   }
 
   Future<void> saveApiKey(String key) async {
-    final clean = key.trim();
+    final clean = GeminiAITutorService.cleanKey(key);
     state = state.copyWith(apiKey: clean);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_apiKeyStorageKey, clean);
@@ -79,21 +79,20 @@ class TutorSettingsNotifier extends Notifier<TutorSettingsState> {
   Future<bool> testApiKey(String key) async {
     state = state.copyWith(isValidatingKey: true, keyValidationSuccess: null);
 
-    final success = await GeminiAITutorService.testApiKey(key);
+    final clean = GeminiAITutorService.cleanKey(key);
+    final result = await GeminiAITutorService.validateApiKey(clean);
 
     state = state.copyWith(
       isValidatingKey: false,
-      keyValidationSuccess: success,
-      validationMessage: success
-          ? '¡Conexión exitosa con la IA! Tu clave está activa.'
-          : 'Clave inválida o sin conexión a internet. Revisa los caracteres.',
+      keyValidationSuccess: result.isValid,
+      validationMessage: result.message,
     );
 
-    if (success) {
-      await saveApiKey(key);
+    if (result.isValid) {
+      await saveApiKey(clean);
     }
 
-    return success;
+    return result.isValid;
   }
 }
 
