@@ -47,5 +47,9 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
+# Archive for legacy APK installers
+archive_apks/
+
+
 
 distribucion/

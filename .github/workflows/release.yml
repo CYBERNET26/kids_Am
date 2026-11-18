@@ -47,7 +47,6 @@ jobs:
             Abre la app Kids Am e ingresa al **Panel Parental** (ícono de candado) para instalarla automáticamente.
           files: |
             ${{ steps.ver.outputs.apk_name }}
-            KidsAm-installer-v1.0.1.apk
             version.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

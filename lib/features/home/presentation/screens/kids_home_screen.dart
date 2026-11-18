@@ -49,6 +49,8 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(childProfileProvider);
+    final updateState = ref.watch(updateProvider);
+    final hasUpdate = updateState.status == UpdateStatus.updateAvailable && updateState.updateInfo != null;
 
     return Scaffold(
       body: PlayfulBackground(
@@ -147,15 +149,105 @@ class _KidsHomeScreenState extends ConsumerState<KidsHomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  // Acceso a Zona Parental
-                  IconButton(
-                    onPressed: () => context.push('/parent-gate'),
-                    icon: const Icon(Icons.lock, color: AppColors.textMuted, size: 26),
-                    tooltip: 'Zona Padres',
+                  // Acceso a Zona Parental con badge si hay actualización disponible
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        onPressed: () => context.push('/parent-gate'),
+                        icon: const Icon(Icons.lock, color: AppColors.textMuted, size: 26),
+                        tooltip: 'Zona Padres',
+                      ),
+                      if (hasUpdate)
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.system_update_rounded,
+                              size: 11,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
             ),
+
+            // Banner flotante para padres cuando hay una nueva actualización lista
+            if (hasUpdate)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: InkWell(
+                  onTap: () => context.push('/parent-gate'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.orange.shade600, Colors.deepOrange.shade600],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withValues(alpha: 0.35),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🚀', style: TextStyle(fontSize: 22)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '¡Nueva Actualización v${updateState.updateInfo!.version}!',
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const Text(
+                                'Toca aquí o entra al Panel Parental para instalar.',
+                                style: TextStyle(fontSize: 11.5, color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Instalar',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
             const SizedBox(height: 4),
 

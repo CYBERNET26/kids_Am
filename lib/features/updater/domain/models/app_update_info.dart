@@ -45,31 +45,41 @@ class AppUpdateInfo {
     final body = releaseJson['body'] as String? ?? 'Mejoras y actualizaciones generales.';
 
     String downloadUrl = '';
-    String apkName = 'KidsAm-Installer-v1.0.0.apk';
+    String apkName = 'KidsAm-installer-v$cleanVersion.apk';
 
     final assets = releaseJson['assets'] as List<dynamic>?;
     if (assets != null && assets.isNotEmpty) {
+      // Buscar primero el asset que coincida con la versión del tag
       for (final a in assets) {
         final name = a['name'] as String? ?? '';
-        if (name.endsWith('.apk')) {
+        if (name.contains(cleanVersion) && name.endsWith('.apk')) {
           apkName = name;
-          // Preferimos url API de assets si es privado o browser_download_url
-          downloadUrl = (a['url'] as String? ?? a['browser_download_url'] as String? ?? '');
+          downloadUrl = (a['browser_download_url'] as String? ?? a['url'] as String? ?? '');
           break;
+        }
+      }
+      // Fallback a cualquier APK en los assets con browser_download_url público
+      if (downloadUrl.isEmpty) {
+        for (final a in assets) {
+          final name = a['name'] as String? ?? '';
+          if (name.endsWith('.apk')) {
+            apkName = name;
+            downloadUrl = (a['browser_download_url'] as String? ?? a['url'] as String? ?? '');
+            break;
+          }
         }
       }
     }
 
-    // Si no encontró asset en release, usa fallback de descarga de apk del repo
     if (downloadUrl.isEmpty) {
-      downloadUrl = 'https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-Installer-v1.0.0.apk';
+      downloadUrl = 'https://raw.githubusercontent.com/samuel031069/kids_Am/main/$apkName';
     }
 
-    final isNewer = AppVersion.isNewerVersion(cleanVersion, 1);
+    final isNewer = AppVersion.isNewerVersion(cleanVersion, -1);
 
     return AppUpdateInfo(
       version: cleanVersion,
-      versionCode: 1,
+      versionCode: -1,
       title: title,
       changelog: body,
       apkFileName: apkName,

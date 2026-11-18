@@ -1,9 +1,9 @@
 {
-  "version": "1.0.3",
-  "versionCode": 4,
-  "title": "Kids Am v1.0.3 - Lectura de Cuentos con la Seño Sofía y Rompecabezas de Figuras Troqueladas",
+  "version": "1.0.4",
+  "versionCode": 5,
+  "title": "Kids Am v1.0.4 - Actualizaciones Automáticas Optimizadas y Figuras Montessori",
   "releaseDate": "2026-11-18",
-  "changelog": "### 🚀 Novedades y Agregados:\n• Lectura de Cuentos con la Seño Sofía: La profe Sofía ahora lee los cuentos en voz alta con controles interactivos de reproducción completa y lectura por párrafo individual.\n• Rompecabezas de Figuras Reales Troqueladas (Juego de Mesa Montessori): Las piezas ya no son cuadrados con dibujos, sino figuras geométricas troqueladas reales (Estrella, Círculo, Triángulo, Corazón, Rombo, Hexágono, Cruz, Trébol, Escudo, Luna, Gota, Flor) que encastran físicamente en sus huecos de madera correspondientes.\n• Interacción Inteligente de la Seño Sofía en Rompecabezas: La profe Sofía ya no interrumpe cuando colocas una pieza correcta (encastre fluido), sino que habla únicamente cuando te equivocas para guiarte con cariño sobre la forma correcta que debes buscar.\n\n### 🔧 Mejoras:\n• Lectura accesible de preguntas y opciones en el cuestionario de comprensión lectora.\n• Sombreado 3D de piezas troqueladas y hendiduras realistas en el tablero de madera.",
-  "apkFileName": "KidsAm-installer-v1.0.3.apk",
-  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.3.apk"
+  "changelog": "### 🚀 Novedades y Agregados:\n• Sistema de Actualizaciones Automáticas Robusto: Detección instantánea y directa de nuevas versiones sin bloqueos de rate limit ni requerimientos de tokens.\n• Notificación Visual Inmediata: Ahora se muestra un aviso brillante en la pantalla de inicio y una ventana emergente en el Panel Parental cada vez que una actualización está lista.\n• Limpieza de Versiones Anteriores: Las versiones previas se archivaron de forma ordenada, dejando únicamente el instalador oficial más reciente.\n• Rompecabezas de Figuras Reales Troqueladas (Juegos Montessori): Piezas troqueladas con silueta real y silencio pedagógico en aciertos.\n• Lectura de Cuentos con la Seño Sofía en voz alta con controles interactivos.",
+  "apkFileName": "KidsAm-installer-v1.0.4.apk",
+  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.4.apk"
 }

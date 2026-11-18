@@ -1,6 +1,6 @@
 class AppVersion {
-  static const String currentVersion = '1.0.3';
-  static const int currentVersionCode = 4;
+  static const String currentVersion = '1.0.4';
+  static const int currentVersionCode = 5;
 
   /// Calcula la siguiente versión según la regla:
   /// 1.0.0 -> 1.0.1 ... hasta 1.0.9 -> 1.1.0
@@ -27,10 +27,13 @@ class AppVersion {
   }
 
   static bool isNewerVersion(String remoteVersion, int remoteVersionCode) {
-    if (remoteVersionCode > currentVersionCode) return true;
-    if (remoteVersionCode < currentVersionCode) return false;
+    // Si viene un versionCode válido (> 0), comprobamos primero
+    if (remoteVersionCode > 0) {
+      if (remoteVersionCode > currentVersionCode) return true;
+      if (remoteVersionCode < currentVersionCode) return false;
+    }
 
-    // Comparación semántica (ej: 1.0.1 > 1.0.0)
+    // Comparación semántica por partes (ej: 1.0.4 > 1.0.3)
     final localParts = currentVersion.split('.').map((e) => int.tryParse(e) ?? 0).toList();
     final remoteParts = remoteVersion.replaceAll('v', '').split('.').map((e) => int.tryParse(e) ?? 0).toList();
 

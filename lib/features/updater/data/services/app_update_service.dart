@@ -14,31 +14,36 @@ class AppUpdateService {
         ? githubToken.trim()
         : UpdateConfig.defaultGithubToken.trim();
 
-    // 1. Intentar primero a través de GitHub Releases API
-    try {
-      final releaseInfo = await _checkGitHubReleases(token);
-      if (releaseInfo != null) {
-        return releaseInfo;
-      }
-    } catch (_) {}
+    AppUpdateInfo? latestFound;
 
-    // 2. Intentar a través de la API de contenido del repositorio (contents/version.json)
-    try {
-      final contentInfo = await _checkGitHubContentsVersion(token);
-      if (contentInfo != null) {
-        return contentInfo;
-      }
-    } catch (_) {}
-
-    // 3. Intentar a través de raw.githubusercontent.com
+    // 1. Intentar a través de raw.githubusercontent.com (version.json directo)
     try {
       final rawInfo = await _checkRawVersionJson(token);
       if (rawInfo != null) {
-        return rawInfo;
+        if (rawInfo.isUpdateAvailable) return rawInfo;
+        latestFound = rawInfo;
       }
     } catch (_) {}
 
-    return null;
+    // 2. Intentar a través de GitHub Releases API (releases/latest)
+    try {
+      final releaseInfo = await _checkGitHubReleases(token);
+      if (releaseInfo != null) {
+        if (releaseInfo.isUpdateAvailable) return releaseInfo;
+        latestFound ??= releaseInfo;
+      }
+    } catch (_) {}
+
+    // 3. Intentar a través de la API de contenido (contents/version.json)
+    try {
+      final contentInfo = await _checkGitHubContentsVersion(token);
+      if (contentInfo != null) {
+        if (contentInfo.isUpdateAvailable) return contentInfo;
+        latestFound ??= contentInfo;
+      }
+    } catch (_) {}
+
+    return latestFound;
   }
 
   static Future<AppUpdateInfo?> _checkGitHubReleases(String token) async {
