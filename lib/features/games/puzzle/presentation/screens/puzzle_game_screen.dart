@@ -37,19 +37,19 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
       'dim': 2,
       'title': 'Frutas Dulces 🍎',
       'icons': ['🍎', '🍌', '🍓', '🍇'],
-      'speech': '¡Mmm, qué ricas frutas! Coloca la manzana, banana y fresas en sus lugares.',
+      'speech': '¡Qué ricas frutas! Coloca cada fruta en su número correspondiente.',
     },
     3: {
       'dim': 3,
       'title': 'Animales de la Selva 🦁',
       'icons': ['🦁', '🐘', '🦒', '🐼', '🦊', '🐸', '🐯', '🐵', '🦉'],
-      'speech': '¡Desafío de 9 piezas! Arrastra a los reyes de la selva a cada número.',
+      'speech': '¡Desafío de 9 piezas! Arrastra a los animales de la selva a cada casilla.',
     },
     4: {
       'dim': 3,
       'title': 'Exploración Espacial 🚀',
       'icons': ['🚀', '👨‍🚀', '🛸', '🪐', '⭐️', '🌕', '☄️', '🛰️', '👾'],
-      'speech': '¡Viaje a las estrellas! Arma tu cohete y planetas en el tablero espacial.',
+      'speech': '¡Viaje a las estrellas! Coloca cohetes y planetas en su orden numérico.',
     },
     5: {
       'dim': 4,
@@ -89,29 +89,32 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     setState(() {});
   }
 
-  void _checkSolution() {
+  void _checkSolution() async {
     for (int i = 0; i < _boardSlots.length; i++) {
       if (_boardSlots[i] != i) {
         return;
       }
     }
+
     setState(() {
       _isSolved = true;
       _isAutoAdvancing = true;
       _isTip = false;
       _confettiController.play();
-
-      _teacherSpeech = '¡Bravo! ¡Completaste el rompecabezas de $_themeTitle! Eres un genio. Pasando al siguiente nivel.';
-      TeacherVoiceService.instance.speak(_teacherSpeech);
-
-      ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.puzzle);
-
-      Future.delayed(const Duration(milliseconds: 2600), () {
-        if (mounted) {
-          _initPuzzle();
-        }
-      });
+      _teacherSpeech = '¡Bravo! Completaste el rompecabezas de $_themeTitle. ¡Eres increíble! Pasemos al siguiente nivel.';
     });
+
+    ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.puzzle);
+
+    // ESPERAR a que la maestra termine completamente de hablar
+    await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
+
+    // Pausa adicional para disfrutar el éxito
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    if (mounted) {
+      _initPuzzle();
+    }
   }
 
   @override
@@ -145,7 +148,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
             padding: const EdgeInsets.only(bottom: 24),
             child: Column(
               children: [
-                // Globo de la Maestra
+                // Globo de la Maestra Sofía
                 TeacherBubbleWidget(
                   speechText: _teacherSpeech,
                   isCelebration: _isSolved,
@@ -196,7 +199,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
 
                 const SizedBox(height: 10),
 
-                // Tablero de colocación (Drag Targets)
+                // Tablero de colocación (Drag Targets) - completamente contenido y centrado
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: AspectRatio(
@@ -230,7 +233,6 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                               if (_isSolved || _isAutoAdvancing) return;
                               final pieceIndex = details.data;
                               setState(() {
-                                // Si ya había una pieza en este slot, devolverla a disponibles
                                 if (_boardSlots[slotIndex] != null) {
                                   _availablePieces.add(_boardSlots[slotIndex]!);
                                 }
@@ -238,10 +240,10 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                 _availablePieces.remove(pieceIndex);
 
                                 if (pieceIndex == slotIndex) {
-                                  _teacherSpeech = '¡Muy bien colocado el número ${pieceIndex + 1}!';
+                                  _teacherSpeech = '¡Muy bien! El número ${pieceIndex + 1} está en su lugar.';
                                 } else {
                                   _isTip = true;
-                                  _teacherSpeech = 'Fíjate en el número: colocaste el #${pieceIndex + 1} en la casilla #${slotIndex + 1}. ¡Puedes moverlo a su lugar!';
+                                  _teacherSpeech = 'Fíjate en el número: colocaste el #${pieceIndex + 1} en la casilla #${slotIndex + 1}.';
                                 }
                                 TeacherVoiceService.instance.speak(_teacherSpeech);
 
@@ -263,43 +265,62 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                     color: isTargetHovered
                                         ? AppColors.playfulGreen
                                         : (currentPiece != null
-                                            ? AppColors.playfulGreen.withValues(alpha: 0.5)
+                                            ? AppColors.playfulGreen.withValues(alpha: 0.6)
                                             : Colors.grey.shade300),
                                     width: 2,
                                   ),
                                 ),
                                 child: Center(
-                                  child: currentPiece != null
-                                      ? Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              _currentThemeIcons[currentPiece % _currentThemeIcons.length],
-                                              style: TextStyle(
-                                                fontSize: _gridDimension == 2
-                                                    ? 44
-                                                    : (_gridDimension == 3 ? 30 : 22),
-                                              ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: currentPiece != null
+                                          ? Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  _currentThemeIcons[currentPiece % _currentThemeIcons.length],
+                                                  style: TextStyle(
+                                                    fontSize: _gridDimension == 2
+                                                        ? 42
+                                                        : (_gridDimension == 3 ? 28 : 20),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  '#${currentPiece + 1}',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                    color: AppColors.textDark,
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  'Casilla',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade400,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '#${slotIndex + 1}',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade600,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            Text(
-                                              '#${currentPiece + 1}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                                color: AppColors.textDark,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : Text(
-                                          'Casilla\n#${slotIndex + 1}',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
+                                    ),
+                                  ),
                                 ),
                               );
                             },
@@ -317,7 +338,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -334,9 +355,9 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                       children: [
                         const Text(
                           'Piezas para arrastrar:',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         _availablePieces.isEmpty
                             ? Center(
                                 child: Padding(
@@ -346,7 +367,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                         ? '🎉 ¡Completado! Pasando de nivel...'
                                         : 'Todas las piezas fueron ubicadas',
                                     style: const TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.playfulGreen,
                                     ),
@@ -366,8 +387,8 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                         feedback: Material(
                                           color: Colors.transparent,
                                           child: Container(
-                                            width: 72,
-                                            height: 72,
+                                            width: 68,
+                                            height: 68,
                                             decoration: BoxDecoration(
                                               color: AppColors.sunnyYellow,
                                               borderRadius: BorderRadius.circular(16),
@@ -376,7 +397,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                               ],
                                             ),
                                             child: Center(
-                                              child: Text(icon, style: const TextStyle(fontSize: 38)),
+                                              child: Text(icon, style: const TextStyle(fontSize: 34)),
                                             ),
                                           ),
                                         ),
@@ -412,26 +433,32 @@ class _PieceBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 66,
-      height: 66,
+      width: 62,
+      height: 62,
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.sunnyYellow.withValues(alpha: 0.8),
+        color: AppColors.sunnyYellow.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.orange.shade400, width: 2),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 28)),
-          Text(
-            '#${pieceIndex + 1}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
-              color: AppColors.textDark,
-            ),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 26)),
+              Text(
+                '#${pieceIndex + 1}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

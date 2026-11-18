@@ -49,11 +49,6 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     _isTip = false;
     _isAutoAdvancing = false;
 
-    // Progresión en 10 Niveles
-    // Niveles 1-2: Conteo y sumas pequeñas (1 a 5)
-    // Niveles 3-5: Sumas y restas hasta 10
-    // Niveles 6-8: Operaciones combinadas hasta 15
-    // Niveles 9-10: Desafíos hasta 20
     final level = profile.mathLevel;
     int maxGroup;
     if (level <= 2) {
@@ -80,7 +75,6 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
       _correctResult = _firstGroup - _secondGroup;
     }
 
-    // 3 opciones atractivas
     final Set<int> optionSet = {_correctResult};
     while (optionSet.length < 3) {
       final offset = random.nextBool() ? 1 : -1;
@@ -89,7 +83,6 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     }
     _options = optionSet.toList()..shuffle();
 
-    // Explicación de la maestra inicial
     if (_isAddition) {
       _teacherSpeech = '¡Hola! Vamos a sumar: aquí tenemos $_firstGroup y agregamos $_secondGroup. ¿Cuántos hay en total?';
     } else {
@@ -100,40 +93,45 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     setState(() {});
   }
 
-  void _checkAnswer(int answer) {
+  void _checkAnswer(int answer) async {
     if (_isCorrect == true || _isAutoAdvancing) return;
 
-    setState(() {
-      _selectedAnswer = answer;
-      if (answer == _correctResult) {
+    if (answer == _correctResult) {
+      setState(() {
+        _selectedAnswer = answer;
         _isCorrect = true;
         _isTip = false;
         _isAutoAdvancing = true;
         _confettiController.play();
+        _teacherSpeech = '¡Maravilloso! $_firstGroup ${_isAddition ? "más" : "menos"} $_secondGroup es igual a $_correctResult. ¡Muy bien hecho!';
+      });
 
-        _teacherSpeech = '¡Maravilloso! $_firstGroup ${_isAddition ? "más" : "menos"} $_secondGroup es igual a $_correctResult. ¡Ganaste una estrella! Pasemos al siguiente.';
-        TeacherVoiceService.instance.speak(_teacherSpeech);
+      ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.visualMath);
 
-        ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.visualMath);
+      // ESPERAR a que la maestra termine completamente de hablar
+      await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
 
-        // Pasar automáticamente al siguiente ejercicio tras festejo
-        Future.delayed(const Duration(milliseconds: 2200), () {
-          if (mounted) {
-            _generateProblem();
-          }
-        });
-      } else {
+      // Pausa cómoda para que el niño disfrute el festejo antes de avanzar
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      if (mounted) {
+        _generateProblem();
+      }
+    } else {
+      setState(() {
+        _selectedAnswer = answer;
         _isCorrect = false;
         _isTip = true;
-        // Explicación pedagógica alternativa y distinta a la primera
         if (_isAddition) {
-          _teacherSpeech = '¡Casi lo logras! Mira con atención: cuenta primero los $_firstGroup de arriba y sigue contando uno a uno los $_secondGroup de abajo. ¡Intenta de nuevo!';
+          _teacherSpeech = '¡Casi lo logras! Mira con atención: contemos primero los de arriba y luego agregamos los de abajo. ¡Intenta de nuevo!';
         } else {
-          _teacherSpeech = '¡Ánimo! Imagina que tienes $_firstGroup caramelos y te comes $_secondGroup. Cuenta los que quedan sueltos.';
+          _teacherSpeech = '¡Ánimo! Quita mentalmente los $_secondGroup objetos tachados y cuenta cuántos quedan.';
         }
-        TeacherVoiceService.instance.speak(_teacherSpeech);
-      }
-    });
+      });
+
+      // Explicación alternativa paciente
+      TeacherVoiceService.instance.speak(_teacherSpeech);
+    }
   }
 
   @override
@@ -167,7 +165,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
             padding: const EdgeInsets.only(bottom: 24),
             child: Column(
               children: [
-                // Globo de la Profe Sofía con Voz
+                // Globo de la Maestra Sofía
                 TeacherBubbleWidget(
                   speechText: _teacherSpeech,
                   isCelebration: _isCorrect == true,
@@ -218,7 +216,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
 
                 const SizedBox(height: 10),
 
-                // Visualizador de figuras grupales
+                // Tarjeta central con objetos centrados
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Card(
@@ -227,6 +225,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Wrap(
                             spacing: 8,
@@ -234,15 +233,18 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                             alignment: WrapAlignment.center,
                             children: List.generate(
                               _firstGroup,
-                              (i) => Text(_currentEmoji, style: const TextStyle(fontSize: 38)),
+                              (i) => FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(_currentEmoji, style: const TextStyle(fontSize: 36)),
+                              ),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
                               _isAddition ? '+' : '−',
                               style: const TextStyle(
-                                fontSize: 36,
+                                fontSize: 34,
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.primaryBlue,
                               ),
@@ -254,7 +256,10 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                             alignment: WrapAlignment.center,
                             children: List.generate(
                               _secondGroup,
-                              (i) => Text(_currentEmoji, style: const TextStyle(fontSize: 38)),
+                              (i) => FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(_currentEmoji, style: const TextStyle(fontSize: 36)),
+                              ),
                             ),
                           ),
                         ],
@@ -265,19 +270,22 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
 
                 const SizedBox(height: 16),
 
-                // Expresión numérica
-                Text(
-                  '$_firstGroup ${_isAddition ? "+" : "−"} $_secondGroup = ?',
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                // Expresión numérica centrada
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '$_firstGroup ${_isAddition ? "+" : "−"} $_secondGroup = ?',
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // Opciones táctiles para responder
+                // Opciones táctiles para responder centradas y con FittedBox
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -309,7 +317,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                             borderRadius: BorderRadius.circular(20),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 250),
-                              height: 70,
+                              height: 68,
                               decoration: BoxDecoration(
                                 color: btnColor,
                                 borderRadius: BorderRadius.circular(20),
@@ -326,12 +334,18 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                                 ],
                               ),
                               child: Center(
-                                child: Text(
-                                  '$option',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: txtColor,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      '$option',
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: txtColor,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -351,7 +365,7 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                       Icon(Icons.check_circle, color: AppColors.playfulGreen, size: 24),
                       SizedBox(width: 8),
                       Text(
-                        '¡Excelente! Pasando al siguiente ejercicio...',
+                        '¡Excelente! Avanzando al siguiente ejercicio...',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,

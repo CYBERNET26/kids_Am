@@ -18,12 +18,12 @@ class KidsHomeScreen extends ConsumerWidget {
           children: [
             // Header con Perfil, Estrellas y botón de Padres
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
-                  // Avatar y Nombre del Niño
+                  // Avatar del Niño
                   Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: AppColors.sunnyYellow,
                       shape: BoxShape.circle,
@@ -31,48 +31,56 @@ class KidsHomeScreen extends ConsumerWidget {
                         BoxShadow(
                           color: AppColors.sunnyYellow.withValues(alpha: 0.4),
                           blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          offset: const Offset(0, 3),
                         )
                       ],
                     ),
                     child: const CircleAvatar(
-                      radius: 26,
+                      radius: 24,
                       backgroundColor: Colors.white,
-                      child: Icon(Icons.face_5, size: 36, color: AppColors.primaryBlue),
+                      child: Icon(Icons.face_5, size: 34, color: AppColors.primaryBlue),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '¡Hola, ${profile.name}!',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
+                  const SizedBox(width: 10),
+                  // Nombre y Nivel en Expanded para evitar desbordamiento
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '¡Hola, ${profile.name}!',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Explorador Nivel ${profile.mathLevel}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textMuted,
+                        Text(
+                          'Explorador Nivel ${profile.mathLevel}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textMuted,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   // Contador de Estrellas
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.sunnyYellow,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.orange.withValues(alpha: 0.3),
+                          color: Colors.orange.withValues(alpha: 0.25),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         )
@@ -81,12 +89,12 @@ class KidsHomeScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star, color: Colors.orange, size: 26),
-                        const SizedBox(width: 6),
+                        const Icon(Icons.star, color: Colors.orange, size: 22),
+                        const SizedBox(width: 4),
                         Text(
                           '${profile.totalStars}',
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textDark,
                           ),
@@ -94,28 +102,28 @@ class KidsHomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 6),
                   // Acceso a Zona Parental
                   IconButton(
                     onPressed: () => context.push('/parent-gate'),
-                    icon: const Icon(Icons.lock, color: AppColors.textMuted, size: 28),
+                    icon: const Icon(Icons.lock, color: AppColors.textMuted, size: 26),
                     tooltip: 'Zona Padres',
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
 
-            // Título de la aventura
+            // Título de la aventura centrado
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Elige tu Aventura de Hoy 🚀',
+                  'Elige tu Aventura 🚀',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
                   ),
@@ -123,47 +131,47 @@ class KidsHomeScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-            // Cuadrícula interactiva de mundos
+            // Cuadrícula interactiva de mundos perfectamente centrada y adaptativa
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
-                padding: const EdgeInsets.all(16),
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.95,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                childAspectRatio: 0.84, // Proporción cómoda para móviles evitando desbordes
                 children: [
                   _WorldCard(
                     title: 'Mundo Matemático',
                     subtitle: 'Nivel ${profile.mathLevel} de 10',
-                    badgeText: 'Conteo y Cálculo',
-                    icon: Icons.calculate,
-                    gradientColors: const [Color(0xFFFF9233), Color(0xFFFFD15C)],
+                    badgeText: 'Conteo y Sumas',
+                    icon: Icons.calculate_rounded,
+                    gradientColors: const [Color(0xFFFF9233), Color(0xFFFFB347)],
                     onTap: () => context.push('/games/math'),
                   ),
                   _WorldCard(
                     title: 'Mini-Ajedrez',
                     subtitle: 'Misión ${profile.chessLevel} de 6',
                     badgeText: 'Ajedrez Mágico',
-                    icon: Icons.castle,
+                    icon: Icons.castle_rounded,
                     gradientColors: const [Color(0xFF8E44AD), Color(0xFFBA68C8)],
                     onTap: () => context.push('/games/chess'),
                   ),
                   _WorldCard(
                     title: 'Rompecabezas',
                     subtitle: 'Nivel ${profile.puzzleLevel} de 5',
-                    badgeText: 'Animales y Espacio',
-                    icon: Icons.extension,
-                    gradientColors: const [Color(0xFF5CD85A), Color(0xFF2ECC71)],
+                    badgeText: 'Puzles y Figuras',
+                    icon: Icons.extension_rounded,
+                    gradientColors: const [Color(0xFF43C651), Color(0xFF2ECC71)],
                     onTap: () => context.push('/games/puzzle'),
                   ),
                   _WorldCard(
                     title: 'Cine Divertido',
-                    subtitle: 'YouTube y Videos',
+                    subtitle: 'Videos y Música',
                     badgeText: 'Sin Anuncios',
-                    icon: Icons.play_circle_fill,
-                    gradientColors: const [Color(0xFF4A90E2), Color(0xFF5DADE2)],
+                    icon: Icons.play_circle_fill_rounded,
+                    gradientColors: const [Color(0xFF3498DB), Color(0xFF5DADE2)],
                     onTap: () => context.push('/videos'),
                   ),
                 ],
@@ -204,60 +212,71 @@ class _WorldCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: gradientColors.first.withValues(alpha: 0.35),
               blurRadius: 10,
-              offset: const Offset(0, 6),
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white.withValues(alpha: 0.25),
-                  child: Icon(icon, size: 36, color: Colors.white),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+            // Icono centrado en burbuja luminosa
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: Colors.white.withValues(alpha: 0.28),
+              child: Icon(icon, size: 34, color: Colors.white),
             ),
-            const Spacer(),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            const SizedBox(height: 8),
+            // Píldora de categoría centrada
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                badgeText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            const Spacer(),
+            // Título centrado con FittedBox para nunca salirse del cuadrado
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 3),
+            // Subtítulo centrado
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -266,4 +285,3 @@ class _WorldCard extends StatelessWidget {
     );
   }
 }
-

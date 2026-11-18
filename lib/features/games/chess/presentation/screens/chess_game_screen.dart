@@ -47,10 +47,8 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     _isTip = false;
 
     final level = profile.chessLevel;
-    // Configuración según los 6 niveles
     switch (level) {
       case 1:
-        // Nivel 1: Torre directa
         _currentPieceType = ChessPieceType.rook;
         _pieceRow = 0;
         _pieceCol = 0;
@@ -59,17 +57,15 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         _teacherSpeech = '¡Hola pequeño gran maestro! Esta es la Torre 🏰. Se mueve en línea recta. ¡Muévela hacia la gema dorada!';
         break;
       case 2:
-        // Nivel 2: Torre con obstáculo en el centro
         _currentPieceType = ChessPieceType.rook;
         _pieceRow = 0;
         _pieceCol = 0;
         _targetRow = 3;
         _targetCol = 3;
-        _obstacles.add('0,2'); // Muro
+        _obstacles.add('0,2');
         _teacherSpeech = '¡Cuidado! Hay una roca en el camino. Mueve tu Torre hacia abajo y luego hacia la gema.';
         break;
       case 3:
-        // Nivel 3: Alfil en diagonal
         _currentPieceType = ChessPieceType.bishop;
         _pieceRow = 0;
         _pieceCol = 0;
@@ -78,7 +74,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         _teacherSpeech = '¡Ahora aprenderemos con el Alfil 🧙‍♂️! El Alfil se desliza únicamente en diagonal como una X. ¡Alcanza la gema!';
         break;
       case 4:
-        // Nivel 4: Caballo en L directo
         _currentPieceType = ChessPieceType.knight;
         _pieceRow = 0;
         _pieceCol = 0;
@@ -87,7 +82,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         _teacherSpeech = '¡Llegó el Caballo 🐴! El caballo da saltos mágicos en forma de letra L: dos pasos y uno al costado.';
         break;
       case 5:
-        // Nivel 5: Caballo en dos saltos esquivando roca
         _currentPieceType = ChessPieceType.knight;
         _pieceRow = 0;
         _pieceCol = 0;
@@ -97,7 +91,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         _teacherSpeech = '¡Misión avanzada de Caballo! Debes hacer dos saltos en L para rodear la montaña y capturar la gema.';
         break;
       default:
-        // Nivel 6+: La Reina
         _currentPieceType = ChessPieceType.queen;
         _pieceRow = 0;
         _pieceCol = 1;
@@ -125,9 +118,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
 
     switch (_currentPieceType) {
       case ChessPieceType.rook:
-        // Misma fila o misma columna
         if (_pieceRow == toRow) {
-          // Chequear obstáculos en el trayecto
           final minC = _pieceCol < toCol ? _pieceCol : toCol;
           final maxC = _pieceCol > toCol ? _pieceCol : toCol;
           for (int c = minC + 1; c < maxC; c++) {
@@ -145,7 +136,6 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         return false;
 
       case ChessPieceType.bishop:
-        // Diagonal dRow == dCol
         if (dRow == dCol && dRow > 0) {
           final stepR = toRow > _pieceRow ? 1 : -1;
           final stepC = toCol > _pieceCol ? 1 : -1;
@@ -161,16 +151,13 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         return false;
 
       case ChessPieceType.knight:
-        // Salto en L (puede saltar por encima de obstáculos)
         return (dRow == 1 && dCol == 2) || (dRow == 2 && dCol == 1);
 
       case ChessPieceType.queen:
-        // Torre o Alfil
         final isStraight = (_pieceRow == toRow || _pieceCol == toCol);
         final isDiag = (dRow == dCol);
         if (!isStraight && !isDiag) return false;
 
-        // Comprobación de camino libre
         final stepR = (toRow - _pieceRow) == 0 ? 0 : ((toRow - _pieceRow) > 0 ? 1 : -1);
         final stepC = (toCol - _pieceCol) == 0 ? 0 : ((toCol - _pieceCol) > 0 ? 1 : -1);
         int curR = _pieceRow + stepR;
@@ -184,7 +171,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
     }
   }
 
-  void _onTileTapped(int row, int col) {
+  void _onTileTapped(int row, int col) async {
     if (_missionComplete || _isAutoAdvancing) return;
 
     if (_isValidMove(row, col)) {
@@ -192,43 +179,48 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
         _pieceRow = row;
         _pieceCol = col;
         _isTip = false;
+      });
 
-        if (_pieceRow == _targetRow && _pieceCol == _targetCol) {
+      if (_pieceRow == _targetRow && _pieceCol == _targetCol) {
+        setState(() {
           _missionComplete = true;
           _isAutoAdvancing = true;
           _confettiController.play();
+          _teacherSpeech = '¡Excelente jugada! Llegaste a la gema mágica y ganaste una estrella. ¡Felicitaciones!';
+        });
 
-          _teacherSpeech = '¡Excelente jugada! ¡Llegaste a la gema mágica y ganaste una estrella! Pasemos al siguiente reto de ajedrez.';
-          TeacherVoiceService.instance.speak(_teacherSpeech);
+        ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.chess);
 
-          ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.chess);
+        // ESPERAR a que la maestra termine de hablar
+        await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
 
-          Future.delayed(const Duration(milliseconds: 2400), () {
-            if (mounted) {
-              _initMission();
-            }
-          });
-        } else {
-          _teacherSpeech = '¡Buen paso! Ahora busca el siguiente movimiento para acercarte a la gema.';
-          TeacherVoiceService.instance.speak(_teacherSpeech);
+        // Pausa adicional para ver la victoria
+        await Future.delayed(const Duration(milliseconds: 1000));
+
+        if (mounted) {
+          _initMission();
         }
-      });
+      } else {
+        setState(() {
+          _teacherSpeech = '¡Buen paso! Ahora busca el siguiente movimiento para acercarte a la gema.';
+        });
+        TeacherVoiceService.instance.speak(_teacherSpeech);
+      }
     } else {
       setState(() {
         _isTip = true;
-        // Explicación pedagógica alternativa si erra
         switch (_currentPieceType) {
           case ChessPieceType.rook:
-            _teacherSpeech = 'La Torre solo puede caminar hacia adelante, atrás, izquierda o derecha en línea recta. ¡Toca una casilla con punto verde!';
+            _teacherSpeech = 'La Torre solo puede caminar hacia adelante, atrás o a los lados. ¡Toca una casilla con punto verde!';
             break;
           case ChessPieceType.bishop:
-            _teacherSpeech = 'El Alfil solo camina en diagonal por las casillas de su mismo color. ¡Mira los puntos verdes sugeridos!';
+            _teacherSpeech = 'El Alfil solo camina en diagonal por casillas del mismo color. ¡Mira los puntos verdes sugeridos!';
             break;
           case ChessPieceType.knight:
-            _teacherSpeech = 'El caballo dibuja una letra L: camina dos casillas y dobla una. ¡Intenta tocar una de las casillas marcadas!';
+            _teacherSpeech = 'El caballo dibuja una letra L: dos casillas y dobla una. ¡Intenta tocar una de las casillas marcadas!';
             break;
           case ChessPieceType.queen:
-            _teacherSpeech = 'La reina puede ir recto o en diagonal, pero no puede atravesar rocas. ¡Busca un camino libre!';
+            _teacherSpeech = 'La reina puede ir recto o en diagonal, pero no puede atravesar rocas. ¡Busca un camino despejado!';
             break;
         }
       });
@@ -279,7 +271,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
             padding: const EdgeInsets.only(bottom: 24),
             child: Column(
               children: [
-                // Globo de la Maestra
+                // Globo de la Maestra Sofía
                 TeacherBubbleWidget(
                   speechText: _teacherSpeech,
                   isCelebration: _missionComplete,
@@ -330,16 +322,16 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
 
                 const SizedBox(height: 10),
 
-                // Tablero 4x4
+                // Tablero 4x4 centrado donde todo queda dentro de cada casilla
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.brown.shade800, width: 4),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.15),
@@ -349,7 +341,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           child: GridView.builder(
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -374,10 +366,10 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                                     children: [
                                       if (isValidTarget && !_missionComplete)
                                         Container(
-                                          width: 22,
-                                          height: 22,
+                                          width: 20,
+                                          height: 20,
                                           decoration: BoxDecoration(
-                                            color: Colors.green.withValues(alpha: 0.7),
+                                            color: Colors.green.withValues(alpha: 0.75),
                                             shape: BoxShape.circle,
                                             boxShadow: const [
                                               BoxShadow(color: Colors.white, blurRadius: 4)
@@ -385,13 +377,31 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                                           ),
                                         ),
                                       if (isObstacle)
-                                        const Text('🪨', style: TextStyle(fontSize: 32)),
+                                        Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: const Text('🪨', style: TextStyle(fontSize: 32)),
+                                          ),
+                                        ),
                                       if (isTargetHere && !_missionComplete)
-                                        const Text('💎', style: TextStyle(fontSize: 34)),
+                                        Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: const Text('💎', style: TextStyle(fontSize: 32)),
+                                          ),
+                                        ),
                                       if (isPieceHere)
-                                        Text(
-                                          _getPieceEmoji(),
-                                          style: const TextStyle(fontSize: 40),
+                                        Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              _getPieceEmoji(),
+                                              style: const TextStyle(fontSize: 38),
+                                            ),
+                                          ),
                                         ),
                                     ],
                                   ),
@@ -413,7 +423,7 @@ class _ChessGameScreenState extends ConsumerState<ChessGameScreen> {
                       Icon(Icons.check_circle, color: AppColors.playfulGreen, size: 24),
                       SizedBox(width: 8),
                       Text(
-                        '¡Misión Cumplida! Pasando al siguiente reto...',
+                        '¡Misión Cumplida! Avanzando al siguiente reto...',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
