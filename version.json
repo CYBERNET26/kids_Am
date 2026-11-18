@@ -1,9 +1,9 @@
 {
-  "version": "1.0.2",
-  "versionCode": 3,
-  "title": "Kids Am v1.0.2 - Tablero Ajedrez 8x8 con Mate en 1, Puzles de Encastre y Cuentas Progresivas",
+  "version": "1.0.3",
+  "versionCode": 4,
+  "title": "Kids Am v1.0.3 - Lectura de Cuentos con la Seño Sofía y Rompecabezas de Figuras Troqueladas",
   "releaseDate": "2026-11-18",
-  "changelog": "### 🚀 Novedades y Agregados:\n• Ajedrez Completo 8x8: Tablero oficial con coordenadas A-H y 1-8, misiones de táctica y maniobras.\n• Ajedrez Mate en 1: A partir del Nivel 4 (después de Nivel 3), se activan desafíos tácticos de Jaque Mate en 1 jugada con detección inteligente.\n• Rompecabezas de Encastre Montessori: Las piezas ahora tienen formas geométricas reales (estrella, círculo, triángulo, corazón, diamante, etc.) y encajan únicamente en su hueco de silueta correspondiente.\n• Progresión de 10 Niveles en Rompecabezas: Sube de nivel y dificultad cada 25 ejercicios resueltos (total de 250 rompecabezas).\n• Matemáticas Progresivas: Nivel 1 con progresión gradual en 5 fases hasta un máximo de 100, con representación visual en bloques Base 10 (Decenas y Unidades).\n\n### 🔧 Mejoras:\n• Opciones de respuesta calibradas con distractores cercanos.\n• Mayor precisión y estabilidad en el guardado de progreso.",
-  "apkFileName": "KidsAm-installer-v1.0.2.apk",
-  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.2.apk"
+  "changelog": "### 🚀 Novedades y Agregados:\n• Lectura de Cuentos con la Seño Sofía: La profe Sofía ahora lee los cuentos en voz alta con controles interactivos de reproducción completa y lectura por párrafo individual.\n• Rompecabezas de Figuras Reales Troqueladas (Juego de Mesa Montessori): Las piezas ya no son cuadrados con dibujos, sino figuras geométricas troqueladas reales (Estrella, Círculo, Triángulo, Corazón, Rombo, Hexágono, Cruz, Trébol, Escudo, Luna, Gota, Flor) que encastran físicamente en sus huecos de madera correspondientes.\n• Interacción Inteligente de la Seño Sofía en Rompecabezas: La profe Sofía ya no interrumpe cuando colocas una pieza correcta (encastre fluido), sino que habla únicamente cuando te equivocas para guiarte con cariño sobre la forma correcta que debes buscar.\n\n### 🔧 Mejoras:\n• Lectura accesible de preguntas y opciones en el cuestionario de comprensión lectora.\n• Sombreado 3D de piezas troqueladas y hendiduras realistas en el tablero de madera.",
+  "apkFileName": "KidsAm-installer-v1.0.3.apk",
+  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.3.apk"
 }

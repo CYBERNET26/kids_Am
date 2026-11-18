@@ -44,15 +44,39 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
     super.dispose();
   }
 
+  int? _readingParagraphIndex;
+
   void _toggleReadAloud() {
     if (_isReadingAloud) {
       TeacherVoiceService.instance.stop();
-      setState(() => _isReadingAloud = false);
+      setState(() {
+        _isReadingAloud = false;
+        _readingParagraphIndex = null;
+      });
     } else {
-      setState(() => _isReadingAloud = true);
-      final fullText = '${widget.story.title}. ${widget.story.paragraphs.join(' ')}. Moraleja: ${widget.story.moral}';
+      setState(() {
+        _isReadingAloud = true;
+        _readingParagraphIndex = null;
+      });
+      final fullText =
+          '¡Hola! Te voy a leer el cuento: ${widget.story.title}. ${widget.story.paragraphs.join(' ')}. Moraleja: ${widget.story.moral}. ¡Ahora puedes responder las preguntas!';
       TeacherVoiceService.instance.speak(fullText);
     }
+  }
+
+  void _readParagraph(int index, String text) {
+    TeacherVoiceService.instance.stop();
+    setState(() {
+      _isReadingAloud = true;
+      _readingParagraphIndex = index;
+    });
+    TeacherVoiceService.instance.speak(text);
+  }
+
+  void _readQuestionAloud() {
+    final question = widget.story.questions[_currentQuestionIndex];
+    final text = 'Pregunta ${_currentQuestionIndex + 1}: ${question.question}. Opción 1: ${question.options[0]}. Opción 2: ${question.options[1]}. Opción 3: ${question.options[2]}.';
+    TeacherVoiceService.instance.speak(text);
   }
 
   void _startQuiz() {
@@ -286,29 +310,155 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
               ),
             ),
 
+            const SizedBox(height: 14),
+
+            // Tarjeta destacada de la Seño Sofía
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _isReadingAloud
+                      ? [const Color(0xFFE8F5E9), const Color(0xFFC8E6C9)]
+                      : [const Color(0xFFE3F2FD), const Color(0xFFBBDEFB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _isReadingAloud ? Colors.green.shade400 : AppColors.primaryBlue.withValues(alpha: 0.4),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  )
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 4,
+                        )
+                      ],
+                    ),
+                    child: const Text('👩‍🏫', style: TextStyle(fontSize: 28)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isReadingAloud
+                              ? 'La Seño Sofía está leyendo... 🎧'
+                              : '¿Quieres que te lea el cuento?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: _isReadingAloud ? Colors.green.shade900 : const Color(0xFF0D47A1),
+                          ),
+                        ),
+                        Text(
+                          _isReadingAloud
+                              ? 'Toca para pausar la lectura'
+                              : 'Toca el botón para escuchar a la Seño Sofía',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _toggleReadAloud,
+                    icon: Icon(
+                      _isReadingAloud ? Icons.pause_rounded : Icons.volume_up_rounded,
+                      size: 20,
+                    ),
+                    label: Text(_isReadingAloud ? 'Pausar' : 'Escuchar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isReadingAloud ? Colors.orange.shade700 : AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 16),
 
-            // Párrafos del cuento
-            ...widget.story.paragraphs.map(
-              (p) => Container(
+            // Párrafos del cuento con botón para escuchar párrafo individual
+            ...List.generate(widget.story.paragraphs.length, (i) {
+              final p = widget.story.paragraphs[i];
+              final isCurrent = _readingParagraphIndex == i;
+
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
                 margin: const EdgeInsets.only(bottom: 14),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: isCurrent
+                      ? Colors.amber.shade50
+                      : Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Text(
-                  p,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    height: 1.6,
-                    color: AppColors.textDark,
-                    letterSpacing: 0.2,
+                  border: Border.all(
+                    color: isCurrent ? Colors.orange.shade400 : Colors.grey.shade200,
+                    width: isCurrent ? 2 : 1,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
                 ),
-              ),
-            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      p,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        height: 1.6,
+                        color: AppColors.textDark,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => _readParagraph(i, p),
+                        icon: const Icon(Icons.volume_up_rounded, size: 16, color: AppColors.primaryBlue),
+                        label: const Text(
+                          'Escuchar párrafo',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.08),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
 
             // Moraleja
             Container(
@@ -457,10 +607,8 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.volume_up_rounded, color: AppColors.primaryBlue),
-                        onPressed: () {
-                          TeacherVoiceService.instance.speak(question.question);
-                        },
-                        tooltip: 'Escuchar pregunta',
+                        onPressed: _readQuestionAloud,
+                        tooltip: 'Escuchar pregunta y opciones',
                       ),
                     ],
                   ),

@@ -10,19 +10,293 @@ import 'package:kids_am/core/widgets/teacher_bubble_widget.dart';
 import 'package:kids_am/features/profile/presentation/providers/profile_provider.dart';
 import 'package:kids_am/features/games/domain/models/game_level.dart';
 
+enum ShapeType {
+  circle,
+  star,
+  triangle,
+  heart,
+  diamond,
+  hexagon,
+  cross,
+  clover,
+  shield,
+  moon,
+  drop,
+  flower,
+}
+
 class PuzzleShapeInfo {
+  final ShapeType type;
   final String name;
   final String symbol;
   final IconData icon;
   final Color color;
 
   const PuzzleShapeInfo({
+    required this.type,
     required this.name,
     required this.symbol,
     required this.icon,
     required this.color,
   });
 }
+
+// ---------------------------------------------------------------------------
+// CLIPPERS PARA FIGURAS DE ENCASTRE REALES (COMO JUEGOS DE MESA DE MADERA)
+// ---------------------------------------------------------------------------
+
+class StarClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double cx = size.width / 2;
+    final double cy = size.height / 2;
+    final double outerR = size.width / 2;
+    final double innerR = outerR * 0.42;
+    const int points = 5;
+    final double step = pi / points;
+    double rot = -pi / 2;
+
+    for (int i = 0; i < points * 2; i++) {
+      final double r = i.isEven ? outerR : innerR;
+      final double x = cx + cos(rot) * r;
+      final double y = cy + sin(rot) * r;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+      rot += step;
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class TriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(size.width / 2, 2);
+    path.lineTo(size.width - 2, size.height - 2);
+    path.lineTo(2, size.height - 2);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class HeartClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double w = size.width;
+    final double h = size.height;
+    path.moveTo(w / 2, h * 0.88);
+    path.cubicTo(w * 0.08, h * 0.62, 0, h * 0.38, 0, h * 0.26);
+    path.cubicTo(0, h * 0.06, w * 0.36, 0, w / 2, h * 0.28);
+    path.cubicTo(w * 0.64, 0, w, h * 0.06, w, h * 0.26);
+    path.cubicTo(w, h * 0.38, w * 0.92, h * 0.62, w / 2, h * 0.88);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class DiamondClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(size.width / 2, 2);
+    path.lineTo(size.width - 2, size.height / 2);
+    path.lineTo(size.width / 2, size.height - 2);
+    path.lineTo(2, size.height / 2);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class HexagonClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double w = size.width;
+    final double h = size.height;
+    path.moveTo(w * 0.25, 2);
+    path.lineTo(w * 0.75, 2);
+    path.lineTo(w - 2, h * 0.5);
+    path.lineTo(w * 0.75, h - 2);
+    path.lineTo(w * 0.25, h - 2);
+    path.lineTo(2, h * 0.5);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class CrossClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double w = size.width;
+    final double h = size.height;
+    final double a = w * 0.30;
+    final double b = w * 0.70;
+    path.moveTo(a, 0);
+    path.lineTo(b, 0);
+    path.lineTo(b, a);
+    path.lineTo(w, a);
+    path.lineTo(w, b);
+    path.lineTo(b, b);
+    path.lineTo(b, h);
+    path.lineTo(a, h);
+    path.lineTo(a, b);
+    path.lineTo(0, b);
+    path.lineTo(0, a);
+    path.lineTo(a, a);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class CloverClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double w = size.width;
+    final double h = size.height;
+    final double r = w * 0.26;
+    path.addOval(Rect.fromCircle(center: Offset(w / 2, r), radius: r));
+    path.addOval(Rect.fromCircle(center: Offset(w / 2, h - r), radius: r));
+    path.addOval(Rect.fromCircle(center: Offset(r, h / 2), radius: r));
+    path.addOval(Rect.fromCircle(center: Offset(w - r, h / 2), radius: r));
+    path.addRect(Rect.fromCenter(center: Offset(w / 2, h / 2), width: r * 1.4, height: r * 1.4));
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class ShieldClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double w = size.width;
+    final double h = size.height;
+    path.moveTo(2, 2);
+    path.lineTo(w - 2, 2);
+    path.lineTo(w - 2, h * 0.55);
+    path.cubicTo(w - 2, h * 0.88, w / 2, h - 2, w / 2, h - 2);
+    path.cubicTo(w / 2, h - 2, 2, h * 0.88, 2, h * 0.55);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class MoonClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final double w = size.width;
+    final double h = size.height;
+    final base = Path()..addOval(Rect.fromLTWH(0, 0, w, h));
+    final cut = Path()..addOval(Rect.fromLTWH(w * 0.25, 0, w * 0.85, h));
+    return Path.combine(PathOperation.difference, base, cut);
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class DropClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double w = size.width;
+    final double h = size.height;
+    path.moveTo(w / 2, 0);
+    path.cubicTo(w, h * 0.5, w, h * 0.75, w / 2, h);
+    path.cubicTo(0, h * 0.75, 0, h * 0.5, w / 2, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class FlowerClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final double cx = size.width / 2;
+    final double cy = size.height / 2;
+    final double r = size.width * 0.22;
+    const int petals = 6;
+    for (int i = 0; i < petals; i++) {
+      final angle = (2 * pi / petals) * i;
+      final px = cx + cos(angle) * (r * 1.15);
+      final py = cy + sin(angle) * (r * 1.15);
+      path.addOval(Rect.fromCircle(center: Offset(px, py), radius: r));
+    }
+    path.addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.9));
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+CustomClipper<Path>? getClipperForShape(ShapeType type) {
+  switch (type) {
+    case ShapeType.circle:
+      return null; // ClipOval
+    case ShapeType.star:
+      return StarClipper();
+    case ShapeType.triangle:
+      return TriangleClipper();
+    case ShapeType.heart:
+      return HeartClipper();
+    case ShapeType.diamond:
+      return DiamondClipper();
+    case ShapeType.hexagon:
+      return HexagonClipper();
+    case ShapeType.cross:
+      return CrossClipper();
+    case ShapeType.clover:
+      return CloverClipper();
+    case ShapeType.shield:
+      return ShieldClipper();
+    case ShapeType.moon:
+      return MoonClipper();
+    case ShapeType.drop:
+      return DropClipper();
+    case ShapeType.flower:
+      return FlowerClipper();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PANTALLA PRINCIPAL DE ROMPECABEZAS DE ENCASTRE REAL
+// ---------------------------------------------------------------------------
 
 class PuzzleGameScreen extends ConsumerStatefulWidget {
   const PuzzleGameScreen({super.key});
@@ -53,24 +327,19 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
   String _teacherSpeech = '';
   bool _isTip = false;
 
-  // Catálogo rico de 16 formas de encastre geométricas distintivas
   final List<PuzzleShapeInfo> _shapesBank = const [
-    PuzzleShapeInfo(name: 'Estrella', symbol: '⭐', icon: Icons.star_rounded, color: Color(0xFFFFB300)),
-    PuzzleShapeInfo(name: 'Círculo', symbol: '🟢', icon: Icons.circle, color: Color(0xFF4CAF50)),
-    PuzzleShapeInfo(name: 'Triángulo', symbol: '🔺', icon: Icons.change_history_rounded, color: Color(0xFFE91E63)),
-    PuzzleShapeInfo(name: 'Corazón', symbol: '💖', icon: Icons.favorite_rounded, color: Color(0xFFF44336)),
-    PuzzleShapeInfo(name: 'Rombo', symbol: '🔷', icon: Icons.diamond_rounded, color: Color(0xFF2196F3)),
-    PuzzleShapeInfo(name: 'Hexágono', symbol: '⬡', icon: Icons.hexagon_rounded, color: Color(0xFF9C27B0)),
-    PuzzleShapeInfo(name: 'Trébol', symbol: '🍀', icon: Icons.energy_savings_leaf_rounded, color: Color(0xFF009688)),
-    PuzzleShapeInfo(name: 'Luna', symbol: '🌙', icon: Icons.nightlight_round, color: Color(0xFF3F51B5)),
-    PuzzleShapeInfo(name: 'Nube', symbol: '☁️', icon: Icons.cloud_rounded, color: Color(0xFF00BCD4)),
-    PuzzleShapeInfo(name: 'Flor', symbol: '🌸', icon: Icons.local_florist_rounded, color: Color(0xFFFF4081)),
-    PuzzleShapeInfo(name: 'Escudo', symbol: '🛡️', icon: Icons.shield_rounded, color: Color(0xFF795548)),
-    PuzzleShapeInfo(name: 'Gota', symbol: '💧', icon: Icons.water_drop_rounded, color: Color(0xFF0288D1)),
-    PuzzleShapeInfo(name: 'Destello', symbol: '✨', icon: Icons.auto_awesome, color: Color(0xFFFFD54F)),
-    PuzzleShapeInfo(name: 'Campana', symbol: '🔔', icon: Icons.notifications_rounded, color: Color(0xFFFF9800)),
-    PuzzleShapeInfo(name: 'Hoja', symbol: '🍃', icon: Icons.eco_rounded, color: Color(0xFF8BC34A)),
-    PuzzleShapeInfo(name: 'Corona', symbol: '👑', icon: Icons.workspace_premium_rounded, color: Color(0xFFFFC107)),
+    PuzzleShapeInfo(type: ShapeType.star, name: 'Estrella', symbol: '⭐', icon: Icons.star_rounded, color: Color(0xFFFFB300)),
+    PuzzleShapeInfo(type: ShapeType.circle, name: 'Círculo', symbol: '🟢', icon: Icons.circle, color: Color(0xFF43A047)),
+    PuzzleShapeInfo(type: ShapeType.triangle, name: 'Triángulo', symbol: '🔺', icon: Icons.change_history_rounded, color: Color(0xFFE91E63)),
+    PuzzleShapeInfo(type: ShapeType.heart, name: 'Corazón', symbol: '💖', icon: Icons.favorite_rounded, color: Color(0xFFE53935)),
+    PuzzleShapeInfo(type: ShapeType.diamond, name: 'Rombo', symbol: '🔷', icon: Icons.diamond_rounded, color: Color(0xFF1E88E5)),
+    PuzzleShapeInfo(type: ShapeType.hexagon, name: 'Hexágono', symbol: '⬡', icon: Icons.hexagon_rounded, color: Color(0xFF8E24AA)),
+    PuzzleShapeInfo(type: ShapeType.cross, name: 'Cruz', symbol: '➕', icon: Icons.add_rounded, color: Color(0xFF00ACC1)),
+    PuzzleShapeInfo(type: ShapeType.clover, name: 'Trébol', symbol: '🍀', icon: Icons.energy_savings_leaf_rounded, color: Color(0xFF00897B)),
+    PuzzleShapeInfo(type: ShapeType.shield, name: 'Escudo', symbol: '🛡️', icon: Icons.shield_rounded, color: Color(0xFF6D4C41)),
+    PuzzleShapeInfo(type: ShapeType.moon, name: 'Luna', symbol: '🌙', icon: Icons.nightlight_round, color: Color(0xFF3949AB)),
+    PuzzleShapeInfo(type: ShapeType.drop, name: 'Gota', symbol: '💧', icon: Icons.water_drop_rounded, color: Color(0xFF039BE5)),
+    PuzzleShapeInfo(type: ShapeType.flower, name: 'Flor', symbol: '🌸', icon: Icons.local_florist_rounded, color: Color(0xFFD81B60)),
   ];
 
   final List<Map<String, dynamic>> _puzzleThemesBank = [
@@ -94,14 +363,6 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     {'title': 'Flores y Naturaleza 🌻', 'icons': ['🌻', '🌹', '🌷', '💐', '🌸', '🌼', '🌺', '🌱', '🌿', '☘️', '🍀', '🪴', '🍃', '☀️', '🌈', '🌧️']},
     {'title': 'Castillos y Reyes 🏰', 'icons': ['🏰', '👑', '⚔️', '🛡️', '🐎', '🤴', '👸', '💎', '🗝️', '📜', '🏹', '🦅', '🦁', '📯', '🚩', '🪙']},
     {'title': 'Robots del Futuro 🤖', 'icons': ['🤖', '🦾', '🦿', '⚡️', '🔋', '💻', '🖥️', '📡', '🕹️', '⚙️', '🔧', '🔨', '💡', '🔬', '🚀', '🛸']},
-  ];
-
-  final List<String> _variedPrompts = [
-    '¡Nuevo rompecabezas de encastre! Observa las distintas formas y encaja cada pieza.',
-    '¡Mira las siluetas del tablero! Cada pieza tiene su forma única para encajar.',
-    '¡A encajar formas! Haz coincidir la silueta con su pieza correspondiente.',
-    '¡Excelente concentración! Encuentra dónde encaja la estrella, el círculo y las demás formas.',
-    '¡Diversión encajando! Arrastra cada pieza a su hueco de madera correspondiente.',
   ];
 
   @override
@@ -129,32 +390,27 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     final profile = ref.read(childProfileProvider);
     final level = _currentLevel;
 
-    // Progresión de tamaño y dificultad por niveles (1 a 10):
-    // Niveles 1 y 2: 2x2 = 4 piezas
-    // Niveles 3 y 4: 2x3 = 6 piezas
-    // Niveles 5, 6 y 7: 3x3 = 9 piezas
-    // Niveles 8 y 9: 3x4 = 12 piezas
-    // Nivel 10: 4x4 = 16 piezas
+    // Progresión de dificultad entre niveles (1 a 10):
     if (level <= 2) {
       _gridRows = 2;
-      _gridCols = 2;
+      _gridCols = 2; // 4 piezas
     } else if (level <= 4) {
       _gridRows = 2;
-      _gridCols = 3;
+      _gridCols = 3; // 6 piezas
     } else if (level <= 7) {
       _gridRows = 3;
-      _gridCols = 3;
+      _gridCols = 3; // 9 piezas
     } else if (level <= 9) {
       _gridRows = 3;
-      _gridCols = 4;
+      _gridCols = 4; // 12 piezas
     } else {
       _gridRows = 4;
-      _gridCols = 4;
+      _gridCols = 4; // 16 piezas
     }
 
     final totalPieces = _gridRows * _gridCols;
 
-    // Asignación de formas de encastre distintas y únicas para cada ranura
+    // Asignar formas de encastre geométricas distintas a cada casilla
     final random = Random(_puzzleNumber * 19 + level * 7);
     final shuffledShapes = List<PuzzleShapeInfo>.from(_shapesBank)..shuffle(random);
     _assignedShapes = shuffledShapes.take(totalPieces).toList();
@@ -172,15 +428,16 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     _isAutoAdvancing = false;
     _isTip = false;
 
+    // Saludo solo la primera vez que ingresa a la pantalla
     if (!_hasGreetedThisVisit) {
       _hasGreetedThisVisit = true;
       _teacherSpeech =
-          '¡Hola ${profile.name}! Rompecabezas Nivel $level (Ejercicio $_exerciseInLevel de $exercisesPerLevel). Encaja cada pieza en su hueco de silueta correspondiente.';
+          '¡Hola ${profile.name}! Rompecabezas Nivel $level. Encaja cada figura en su hueco correspondiente de madera.';
+      TeacherVoiceService.instance.speak(_teacherSpeech);
     } else {
-      _teacherSpeech = _variedPrompts[random.nextInt(_variedPrompts.length)];
+      _teacherSpeech = 'Rompecabezas de $_themeTitle. Encaja cada figura en su lugar.';
     }
 
-    TeacherVoiceService.instance.speak(_teacherSpeech);
     setState(() {});
   }
 
@@ -191,6 +448,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
       }
     }
 
+    // Se completó todo el rompecabezas
     final profile = ref.read(childProfileProvider);
     final isLevelComplete = _exerciseInLevel == exercisesPerLevel;
 
@@ -202,10 +460,10 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
 
       if (isLevelComplete) {
         _teacherSpeech =
-            '¡EXTRAORDINARIO ${profile.name}! ¡Completaste los 25 puzles del Nivel $_currentLevel! ¡Avanzas al Nivel ${_currentLevel + 1} con nuevas formas y piezas de encastre!';
+            '¡EXTRAORDINARIO ${profile.name}! ¡Completaste los 25 rompecabezas del Nivel $_currentLevel! ¡Avanzas al Nivel ${_currentLevel + 1} con más figuras de encastre!';
       } else {
         _teacherSpeech =
-            '¡Magnífico encastre! Completaste el rompecabezas de $_themeTitle. ¡Ganaste una estrella dorada!';
+            '¡Excelente trabajo! Encajaste todas las figuras de $_themeTitle. ¡Ganaste una estrella dorada!';
       }
     });
 
@@ -216,7 +474,6 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
       ref.read(childProfileProvider.notifier).advanceLevel(GameType.puzzle);
       nextPuzzle = _puzzleNumber + 1;
     } else if (isLevelComplete && _currentLevel >= totalLevels) {
-      // Completó los 10 niveles (250 ejercicios)
       nextPuzzle = 1;
     } else {
       nextPuzzle = _puzzleNumber + 1;
@@ -225,6 +482,7 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('puzzle_number_index', nextPuzzle);
 
+    // Habla al terminar el rompecabezas completo
     await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
     await Future.delayed(const Duration(milliseconds: 1000));
 
@@ -332,20 +590,20 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
 
                   const SizedBox(height: 10),
 
-                  // TABLERO DE ENCASTRE CON FORMAS
+                  // TABLERO DE MADERA MONTESSORI CON HUECOS TROQUELADOS
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E1), // Aspecto de madera clara Montessori
+                        color: const Color(0xFFEFEBE9), // Madera clara pulida
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFD7CCC8), width: 4),
+                        border: Border.all(color: const Color(0xFFBCAAA4), width: 5),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 12,
-                            offset: const Offset(0, 5),
+                            color: Colors.black.withValues(alpha: 0.16),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
                           )
                         ],
                       ),
@@ -354,8 +612,8 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: _gridCols,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
                           childAspectRatio: 1.0,
                         ),
                         itemCount: totalPieces,
@@ -372,7 +630,8 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                               final draggedShape = _assignedShapes[pieceIndex];
 
                               if (pieceIndex == slotIndex) {
-                                // Encastre exacto
+                                // ENCASTRE CORRECTO:
+                                // REGLA: La Seño Sofía NO habla cuando coloca la pieza correcta
                                 setState(() {
                                   if (_boardSlots[slotIndex] != null) {
                                     _availablePieces.add(_boardSlots[slotIndex]!);
@@ -380,17 +639,16 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                   _boardSlots[slotIndex] = pieceIndex;
                                   _availablePieces.remove(pieceIndex);
                                   _isTip = false;
-                                  _teacherSpeech =
-                                      '¡Clack! La forma ${requiredShape.name} ${requiredShape.symbol} encajó a la perfección.';
+                                  _teacherSpeech = '¡Encastre perfecto! Sigue encajando las demás figuras.';
                                 });
-                                TeacherVoiceService.instance.speak(_teacherSpeech);
+                                // NO se llama a TeacherVoiceService.instance.speak() aquí
                                 _checkSolution();
                               } else {
-                                // No encaja
+                                // ERROR: La Seño Sofía SOLAMENTE habla cuando el niño se equivoca
                                 setState(() {
                                   _isTip = true;
                                   _teacherSpeech =
-                                      '¡Esa pieza es un ${draggedShape.name} ${draggedShape.symbol}! No encaja en el hueco de ${requiredShape.name} ${requiredShape.symbol}. ¡Busca la forma que coincida!';
+                                      '¡Esa pieza es una figura de ${draggedShape.name} ${draggedShape.symbol}! No encaja en el hueco de ${requiredShape.name} ${requiredShape.symbol}. ¡Busca la forma que coincida!';
                                 });
                                 TeacherVoiceService.instance.speak(_teacherSpeech);
                               }
@@ -399,46 +657,20 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                               final isTargetHovered = candidateData.isNotEmpty;
                               final hasPiece = currentPiece != null;
 
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                decoration: BoxDecoration(
-                                  color: hasPiece
-                                      ? requiredShape.color.withValues(alpha: 0.15)
-                                      : (isTargetHovered
-                                          ? requiredShape.color.withValues(alpha: 0.25)
-                                          : const Color(0xFFEFEBE9)),
-                                  borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(
-                                    color: hasPiece
-                                        ? requiredShape.color
-                                        : (isTargetHovered
-                                            ? requiredShape.color
-                                            : Colors.brown.shade200),
-                                    width: hasPiece ? 3 : 2,
-                                    style: hasPiece ? BorderStyle.solid : BorderStyle.solid,
-                                  ),
-                                  boxShadow: hasPiece
-                                      ? [
-                                          BoxShadow(
-                                            color: requiredShape.color.withValues(alpha: 0.3),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          )
-                                        ]
-                                      : [
-                                          // Efecto de hueco vaciado en madera
-                                          BoxShadow(
-                                            color: Colors.brown.withValues(alpha: 0.15),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          )
-                                        ],
-                                ),
-                                child: Center(
-                                  child: hasPiece
-                                      ? _buildFittedPiece(currentPiece, requiredShape)
-                                      : _buildEmptySlotSilhouette(requiredShape),
-                                ),
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final size = constraints.maxWidth;
+
+                                  return Center(
+                                    child: SizedBox(
+                                      width: size,
+                                      height: size,
+                                      child: hasPiece
+                                          ? _buildFittedPiece(currentPiece, requiredShape, size)
+                                          : _buildEmptySlotSilhouette(requiredShape, size, isTargetHovered),
+                                    ),
+                                  );
+                                },
                               );
                             },
                           );
@@ -447,20 +679,20 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
 
-                  // BANDEJA DE PIEZAS PARA ARRASTRAR
+                  // BANDEJA DE PIEZAS DE MADERA TROQUELADAS PARA ARRASTRAR
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
@@ -471,12 +703,12 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                         children: [
                           const Row(
                             children: [
-                              Text('🧩', style: TextStyle(fontSize: 18)),
-                              SizedBox(width: 6),
+                              Text('🧩', style: TextStyle(fontSize: 20)),
+                              SizedBox(width: 8),
                               Text(
-                                'Piezas para encajar (Arrastra a su forma):',
+                                'Figuras para encajar en el tablero:',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textDark,
                                 ),
@@ -490,8 +722,8 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                     padding: const EdgeInsets.symmetric(vertical: 14),
                                     child: Text(
                                       _isSolved
-                                          ? '🎉 ¡Todas las piezas encajaron! Avanzando...'
-                                          : '¡Todas las piezas fueron encajadas!',
+                                          ? '🎉 ¡Todas las figuras encajaron a la perfección!'
+                                          : '¡Todas las figuras fueron encajadas!',
                                       style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
@@ -508,22 +740,23 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
                                       final icon = _currentThemeIcons[pieceIndex % _currentThemeIcons.length];
 
                                       return Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
                                         child: Draggable<int>(
                                           data: pieceIndex,
                                           feedback: Material(
                                             color: Colors.transparent,
-                                            child: _PieceShapeWidget(
+                                            child: _PieceShapeFigure(
                                               shape: shape,
                                               icon: icon,
+                                              size: 78,
                                               isFloating: true,
                                             ),
                                           ),
                                           childWhenDragging: Opacity(
-                                            opacity: 0.25,
-                                            child: _PieceShapeWidget(shape: shape, icon: icon),
+                                            opacity: 0.2,
+                                            child: _PieceShapeFigure(shape: shape, icon: icon, size: 70),
                                           ),
-                                          child: _PieceShapeWidget(shape: shape, icon: icon),
+                                          child: _PieceShapeFigure(shape: shape, icon: icon, size: 70),
                                         ),
                                       );
                                     }).toList(),
@@ -561,111 +794,171 @@ class _PuzzleGameScreenState extends ConsumerState<PuzzleGameScreen> {
     );
   }
 
-  Widget _buildEmptySlotSilhouette(PuzzleShapeInfo shape) {
+  // Ranura vacía: hueco troquelado negativo en madera
+  Widget _buildEmptySlotSilhouette(PuzzleShapeInfo shape, double size, bool isHovered) {
+    final clipper = getClipperForShape(shape.type);
+
+    Widget innerContent = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: isHovered
+            ? shape.color.withValues(alpha: 0.35)
+            : const Color(0xFFD7CCC8), // Madera hundida oscura
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 5,
+            spreadRadius: -2,
+            offset: Offset(0, 3),
+          )
+        ],
+      ),
+      child: Center(
+        child: Icon(
+          shape.icon,
+          size: size * 0.40,
+          color: Colors.brown.shade400.withValues(alpha: 0.7),
+        ),
+      ),
+    );
+
+    if (clipper != null) {
+      return ClipPath(
+        clipper: clipper,
+        child: innerContent,
+      );
+    } else {
+      return ClipOval(child: innerContent);
+    }
+  }
+
+  // Pieza encastrada en la ranura
+  Widget _buildFittedPiece(int pieceIndex, PuzzleShapeInfo shape, double size) {
+    final icon = _currentThemeIcons[pieceIndex % _currentThemeIcons.length];
+    final clipper = getClipperForShape(shape.type);
+
+    Widget fittedContent = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: shape.color,
+        gradient: LinearGradient(
+          colors: [shape.color.withValues(alpha: 0.85), shape.color],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.20),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Center(
+        child: Text(
+          icon,
+          style: TextStyle(fontSize: size * 0.46),
+        ),
+      ),
+    );
+
+    if (clipper != null) {
+      return ClipPath(
+        clipper: clipper,
+        child: fittedContent,
+      );
+    } else {
+      return ClipOval(child: fittedContent);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// FIGURA DE ENCASTRE FÍSICA TROQUELADA (NO CUADRADA)
+// ---------------------------------------------------------------------------
+
+class _PieceShapeFigure extends StatelessWidget {
+  final PuzzleShapeInfo shape;
+  final String icon;
+  final double size;
+  final bool isFloating;
+
+  const _PieceShapeFigure({
+    required this.shape,
+    required this.icon,
+    required this.size,
+    this.isFloating = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final clipper = getClipperForShape(shape.type);
+
+    Widget shapeContent = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: shape.color,
+        gradient: RadialGradient(
+          center: Alignment.topLeft,
+          radius: 0.9,
+          colors: [
+            shape.color.withValues(alpha: 0.95),
+            shape.color,
+          ],
+        ),
+        boxShadow: isFloating
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 8),
+                )
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                )
+              ],
+      ),
+      child: Center(
+        child: Text(
+          icon,
+          style: TextStyle(
+            fontSize: size * 0.46,
+            shadows: const [
+              Shadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+            ],
+          ),
+        ),
+      ),
+    );
+
+    Widget clipped;
+    if (clipper != null) {
+      clipped = ClipPath(clipper: clipper, child: shapeContent);
+    } else {
+      clipped = ClipOval(child: shapeContent);
+    }
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(shape.icon, size: 36, color: shape.color.withValues(alpha: 0.45)),
+        clipped,
         const SizedBox(height: 4),
         Text(
           shape.name,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: Colors.brown.shade400,
+            color: Colors.brown.shade800,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildFittedPiece(int pieceIndex, PuzzleShapeInfo shape) {
-    final icon = _currentThemeIcons[pieceIndex % _currentThemeIcons.length];
-
-    return Container(
-      padding: const EdgeInsets.all(6),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(icon, style: const TextStyle(fontSize: 34)),
-          ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(shape.icon, size: 14, color: shape.color),
-              const SizedBox(width: 2),
-              Text(
-                shape.symbol,
-                style: const TextStyle(fontSize: 10),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PieceShapeWidget extends StatelessWidget {
-  final PuzzleShapeInfo shape;
-  final String icon;
-  final bool isFloating;
-
-  const _PieceShapeWidget({
-    required this.shape,
-    required this.icon,
-    this.isFloating = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final size = isFloating ? 76.0 : 68.0;
-
-    return Container(
-      width: size,
-      height: size,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: shape.color,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isFloating ? 0.35 : 0.15),
-            blurRadius: isFloating ? 12 : 6,
-            offset: Offset(0, isFloating ? 6 : 3),
-          )
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Marca de agua de la forma de encastre
-          Positioned(
-            right: 2,
-            top: 2,
-            child: Icon(shape.icon, size: 16, color: Colors.white70),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(icon, style: TextStyle(fontSize: isFloating ? 32 : 28)),
-              Text(
-                shape.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                  shadows: [Shadow(color: Colors.black45, blurRadius: 2)],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
