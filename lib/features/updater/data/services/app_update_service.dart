@@ -127,7 +127,14 @@ class AppUpdateService {
         ? githubToken.trim()
         : UpdateConfig.defaultGithubToken.trim();
 
-    final targetDir = Directory.systemTemp;
+    Directory targetDir = Directory.systemTemp;
+    try {
+      final safeCacheDir = Directory(targetDir.path.replaceAll('code_cache', 'cache'));
+      if (await safeCacheDir.exists()) {
+        targetDir = safeCacheDir;
+      }
+    } catch (_) {}
+
     final targetFile = File('${targetDir.path}/$fileName');
     if (await targetFile.exists()) {
       await targetFile.delete();

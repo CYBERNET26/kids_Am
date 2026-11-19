@@ -27,6 +27,20 @@ class MainActivity : FlutterActivity() {
                             // Permitir lectura a nivel de archivo para instaladores del sistema
                             file.setReadable(true, false)
 
+                            // Copiar a context.cacheDir si no está allí, para garantizar compatibilidad total con FileProvider
+                            val safeFile = try {
+                                if (file.parentFile?.canonicalPath != context.cacheDir.canonicalPath) {
+                                    val dest = File(context.cacheDir, file.name)
+                                    file.copyTo(dest, overwrite = true)
+                                    dest.setReadable(true, false)
+                                    dest
+                                } else {
+                                    file
+                                }
+                            } catch (_: Exception) {
+                                file
+                            }
+
                             // Verificar permiso de orígenes desconocidos en Android 8.0+
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 if (!context.packageManager.canRequestPackageInstalls()) {
@@ -47,7 +61,7 @@ class MainActivity : FlutterActivity() {
                             val uri: Uri = FileProvider.getUriForFile(
                                 context,
                                 "${context.packageName}.fileprovider",
-                                file
+                                safeFile
                             )
 
                             val intent = Intent(Intent.ACTION_VIEW).apply {
