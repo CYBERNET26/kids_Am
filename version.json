@@ -1,9 +1,9 @@
 {
-  "version": "1.0.8",
-  "versionCode": 9,
-  "title": "Kids Am v1.0.8 - Versión Final con Actualizaciones Dinámicas en Caliente (OTA)",
+  "version": "1.0.9",
+  "versionCode": 10,
+  "title": "Kids Am v1.0.9 - Rompecabezas con Formas de Encastre Reales (Jigsaw) y Dibujos Divertidos",
   "releaseDate": "2026-11-19",
-  "changelog": "### 🚀 Novedades y Agregados:\n• Actualizaciones en Caliente (OTA): Sistema de sincronización de contenidos (cuentos, videos y niveles) directo desde la nube sin tener que reinstalar la app ni pasar por el instalador de paquetes de Android.\n• Modo Tutor Inteligente con Gemini AI y Modo Clásico offline-first agnóstico al progreso del niño.\n• Matemáticas con Teclado Numérico infantil exclusivo, escritura en letras para nivel 7+ y pedagogía adaptativa con Seño Sofía.",
-  "apkFileName": "KidsAm-installer-v1.0.8.apk",
-  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.8.apk"
+  "changelog": "### 🚀 Novedades y Agregados:\n• Rompecabezas con Siluetas de Encastre Reales: Piezas con lengüetas (tabs) y ranuras (blanks) complementarias, esquinas rectas y bordes planos de rompecabezas clásico auténtico.\n• Ilustraciones Divertidas Completas: Al armar las piezas se forman hermosos dibujos coloridos (Dino Fiesta con T-Rex, Perrito Astronauta en el Espacio, Gatito Pirata, León Músico, etc.).\n• Pedagogía Seño Sofía: No habla al colocar la pieza correcta, solo interviene con consejos cariñosos cuando el niño se equivoca y celebra con confeti al completar el dibujo.\n• 10 Niveles de Dificultad (de 4 a 16 piezas) con 25 rompecabezas por nivel.",
+  "apkFileName": "KidsAm-installer-v1.0.9.apk",
+  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.9.apk"
 }

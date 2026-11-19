@@ -5,9 +5,9 @@ import 'package:kids_am/features/stories/data/default_stories.dart';
 
 void main() {
   final bundle = {
-    'bundleVersion': 1,
+    'bundleVersion': 2,
     'updatedAt': '2026-11-19',
-    'releaseNotes': 'Paquete inicial de contenido educativo: cuentos interactivos completos, biblioteca de videos seguros y configuración pedagógica adaptativa.',
+    'releaseNotes': 'Rompecabezas con formas de encastre reales de mesa (jigsaw tabs/blanks) y dibujos divertidos interactivos.',
     'stories': defaultStories.map((s) => s.toJson()).toList(),
     'videos': defaultEducationalVideos.map((v) => v.toJson()).toList(),
     'mathSettings': {
@@ -15,6 +15,11 @@ void main() {
       'levelCount': 10,
       'wordSpellingStartLevel': 7,
       'facilitatedModeMaxAttempts': 2,
+    },
+    'puzzleSettings': {
+      'totalLevels': 10,
+      'exercisesPerLevel': 25,
+      'style': 'classic_jigsaw',
     },
     'tutorConfig': {
       'sofiaTone': 'didactica, cariñosa, motivadora',
