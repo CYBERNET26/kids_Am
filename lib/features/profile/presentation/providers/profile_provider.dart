@@ -42,9 +42,9 @@ class ChildProfileNotifier extends Notifier<ChildProfile> {
     } catch (_) {}
   }
 
-  void recordWin({required GameType gameType}) {
-    final currentConsecutive = state.consecutiveWins + 1;
-    final newStars = state.totalStars + 1;
+  void recordWin({required GameType gameType, bool awardStars = true}) {
+    final currentConsecutive = awardStars ? (state.consecutiveWins + 1) : 0;
+    final newStars = awardStars ? (state.totalStars + 1) : state.totalStars;
 
     final updated = state.copyWith(
       totalStars: newStars,

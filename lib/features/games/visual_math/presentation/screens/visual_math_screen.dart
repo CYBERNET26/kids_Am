@@ -14,6 +14,12 @@ import 'package:kids_am/features/parent_zone/presentation/providers/custom_exerc
 import 'package:kids_am/features/games/visual_math/presentation/widgets/math_preamble_dialog.dart';
 import 'package:kids_am/features/tutor/domain/models/tutor_context.dart';
 import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
+import 'package:kids_am/features/games/visual_math/domain/number_words_helper.dart';
+
+enum MathStep {
+  number, // Ingreso numérico con el teclado numérico
+  word,   // Escritura del nombre del número (activo si mathLevel > 7)
+}
 
 class VisualMathScreen extends ConsumerStatefulWidget {
   const VisualMathScreen({super.key});
@@ -32,8 +38,15 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
   late int _firstGroup;
   late int _secondGroup;
   late int _correctResult;
-  late List<int> _options;
-  int? _selectedAnswer;
+
+  // Estado de ingreso y progresión de respuestas
+  MathStep _currentStep = MathStep.number;
+  String _enteredDigits = '';
+  final TextEditingController _wordController = TextEditingController();
+  int _exerciseMistakes = 0;
+  bool _isFacilitated = false;
+  bool _earnedStar = true;
+
   bool? _isCorrect;
   String _teacherSpeech = '';
   bool _isTip = false;
@@ -116,11 +129,18 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     final profile = ref.read(childProfileProvider);
     final random = Random();
     _currentEmoji = _emojis[random.nextInt(_emojis.length)];
-    _selectedAnswer = null;
     _isCorrect = null;
     _isTip = false;
     _isAutoAdvancing = false;
     _activeCustomExercise = customExercise;
+
+    // Reinicio pedagógico de intentos y pasos
+    _currentStep = MathStep.number;
+    _enteredDigits = '';
+    _wordController.clear();
+    _exerciseMistakes = 0;
+    _isFacilitated = false;
+    _earnedStar = true;
 
     if (customExercise != null) {
       _currentOperation = customExercise.operation;
@@ -166,31 +186,24 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
       switch (_currentOperation) {
         case MathOperation.addition:
           if (level == 1) {
-            // PROGRESIÓN GRADUAL NIVEL 1 (Parámetro máximo hasta 100):
             if (_exerciseNumber <= 15) {
-              // Fase 1: 1 a 10 (conteo visual directo)
               _firstGroup = random.nextInt(5) + 1;
               _secondGroup = random.nextInt(5) + 1;
             } else if (_exerciseNumber <= 35) {
-              // Fase 2: hasta 20
               _firstGroup = random.nextInt(10) + 2;
               _secondGroup = random.nextInt(8) + 1;
             } else if (_exerciseNumber <= 55) {
-              // Fase 3: decenas y números hasta 40
               _firstGroup = (random.nextInt(3) + 1) * 10 + random.nextInt(5);
               _secondGroup = random.nextInt(10) + 1;
             } else if (_exerciseNumber <= 75) {
-              // Fase 4: números hasta 70
               _firstGroup = random.nextInt(35) + 15;
               _secondGroup = random.nextInt(20) + 5;
             } else {
-              // Fase 5: desafío final hasta 100
               _firstGroup = random.nextInt(45) + 25;
               final maxSecond = 100 - _firstGroup;
               _secondGroup = random.nextInt(maxSecond.clamp(5, 35)) + 5;
             }
           } else if (level == 2) {
-            // Nivel 2: sumas con llevadas de 100 a 200
             _firstGroup = random.nextInt(60) + 40;
             _secondGroup = random.nextInt(60) + 20;
           } else if (level <= 5) {
@@ -205,30 +218,24 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
 
         case MathOperation.subtraction:
           if (level == 1) {
-            // PROGRESIÓN GRADUAL NIVEL 1 (Parámetro máximo hasta 100):
             if (_exerciseNumber <= 15) {
-              // Fase 1: restas de 1 a 10
-              _firstGroup = random.nextInt(6) + 4; // 4..9
+              _firstGroup = random.nextInt(6) + 4;
               _secondGroup = random.nextInt(_firstGroup - 1) + 1;
             } else if (_exerciseNumber <= 35) {
-              // Fase 2: restas hasta 20
-              _firstGroup = random.nextInt(10) + 10; // 10..19
+              _firstGroup = random.nextInt(10) + 10;
               _secondGroup = random.nextInt(8) + 1;
             } else if (_exerciseNumber <= 55) {
-              // Fase 3: restas hasta 40
-              _firstGroup = random.nextInt(20) + 20; // 20..39
+              _firstGroup = random.nextInt(20) + 20;
               _secondGroup = random.nextInt(15) + 2;
             } else if (_exerciseNumber <= 75) {
-              // Fase 4: restas hasta 70
-              _firstGroup = random.nextInt(30) + 40; // 40..69
+              _firstGroup = random.nextInt(30) + 40;
               _secondGroup = random.nextInt(25) + 5;
             } else {
-              // Fase 5: restas partiendo de hasta 100
-              _firstGroup = random.nextInt(31) + 70; // 70..100
+              _firstGroup = random.nextInt(31) + 70;
               _secondGroup = random.nextInt(40) + 10;
             }
           } else if (level == 2) {
-            _firstGroup = random.nextInt(80) + 100; // 100..180
+            _firstGroup = random.nextInt(80) + 100;
             _secondGroup = random.nextInt(60) + 20;
           } else if (level <= 5) {
             _firstGroup = random.nextInt(100) + 50;
@@ -242,15 +249,12 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
 
         case MathOperation.multiplication:
           if (level == 3) {
-            // Tablas del 1, 2 y 3 sencillas
-            _firstGroup = random.nextInt(3) + 2; // 2, 3, 4
-            _secondGroup = random.nextInt(3) + 1; // 1, 2, 3
+            _firstGroup = random.nextInt(3) + 2;
+            _secondGroup = random.nextInt(3) + 1;
           } else if (level <= 5) {
-            // Tablas del 2 al 6
-            _firstGroup = random.nextInt(5) + 2; // 2..6
-            _secondGroup = random.nextInt(5) + 2; // 2..6
+            _firstGroup = random.nextInt(5) + 2;
+            _secondGroup = random.nextInt(5) + 2;
           } else {
-            // Tablas completas del 2 al 9
             _firstGroup = random.nextInt(8) + 2;
             _secondGroup = random.nextInt(8) + 2;
           }
@@ -258,13 +262,12 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
           break;
 
         case MathOperation.division:
-          // Divisiones exactas sin resto
           if (level == 6) {
-            _secondGroup = random.nextInt(3) + 2; // divisor: 2, 3 o 4
-            _correctResult = random.nextInt(4) + 2; // cociente: 2, 3, 4, 5
+            _secondGroup = random.nextInt(3) + 2;
+            _correctResult = random.nextInt(4) + 2;
           } else {
-            _secondGroup = random.nextInt(4) + 2; // 2..5
-            _correctResult = random.nextInt(6) + 2; // 2..7
+            _secondGroup = random.nextInt(4) + 2;
+            _correctResult = random.nextInt(6) + 2;
           }
           _firstGroup = _secondGroup * _correctResult;
           break;
@@ -293,101 +296,78 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
       }
     }
 
-    // Opciones de respuesta pedagógicas
-    final Set<int> optionSet = {_correctResult};
-    final List<int> possibleDeltas = _correctResult > 30
-        ? [1, 2, 5, 10, -1, -2, -5, -10]
-        : [1, 2, 3, -1, -2, -3];
-    possibleDeltas.shuffle(random);
-    for (final d in possibleDeltas) {
-      if (optionSet.length >= 3) break;
-      final val = _correctResult + d;
-      if (val >= 0 && val != _correctResult) {
-        optionSet.add(val);
-      }
-    }
-    while (optionSet.length < 3) {
-      final offset = random.nextBool() ? 1 : -1;
-      final distractor = (_correctResult + offset * (random.nextInt(6) + 1)).clamp(0, 200);
-      if (distractor != _correctResult) {
-        optionSet.add(distractor);
-      }
-    }
-    _options = optionSet.toList()..shuffle();
-
     TeacherVoiceService.instance.speak(_teacherSpeech);
     setState(() {});
   }
 
-  void _checkAnswer(int answer) async {
+  /// Manejo de pulsaciones del teclado numérico en pantalla
+  void _onKeypadPress(String key) {
     if (_isCorrect == true || _isAutoAdvancing) return;
 
-    if (answer == _correctResult) {
-      final profile = ref.read(childProfileProvider);
-      final isFinalOfLevel = _exerciseNumber >= totalMathExercises;
-      final wasCustom = _activeCustomExercise != null;
+    if (key == 'DEL') {
+      if (_enteredDigits.isNotEmpty) {
+        setState(() {
+          _enteredDigits = _enteredDigits.substring(0, _enteredDigits.length - 1);
+        });
+      }
+      return;
+    }
 
+    if (key == 'OK') {
+      _submitNumberAnswer();
+      return;
+    }
+
+    // Dígito 0-9
+    if (_enteredDigits.length < 3) {
       setState(() {
-        _selectedAnswer = answer;
-        _isCorrect = true;
-        _isTip = false;
-        _isAutoAdvancing = true;
-        _confettiController.play();
-
-        if (wasCustom) {
-          _teacherSpeech = '¡Bravo ${profile.name}! ¡Resolviste con éxito el desafío especial de mamá y papá! ¡Te ganaste 2 estrellas de premio!';
-        } else if (isFinalOfLevel) {
-          _teacherSpeech =
-              '¡Increíble logro ${profile.name}! ¡Completaste los 100 ejercicios del Nivel ${profile.mathLevel}! ¡Subes al Nivel ${profile.mathLevel + 1} con nuevos aprendizajes!';
+        if (_enteredDigits == '0') {
+          _enteredDigits = key;
         } else {
-          _teacherSpeech =
-              '¡Maravilloso! $_firstGroup ${_currentOperation.symbol} $_secondGroup es igual a $_correctResult. ¡Excelente!';
+          _enteredDigits += key;
         }
       });
+    }
+  }
 
-      if (wasCustom) {
-        ref.read(customExercisesProvider.notifier).markCompleted(_activeCustomExercise!.id);
-        ref.read(childProfileProvider.notifier).addStars(2);
-      } else {
-        ref.read(childProfileProvider.notifier).recordWin(gameType: GameType.visualMath);
-      }
+  /// Validación de la respuesta numérica
+  void _submitNumberAnswer() async {
+    if (_isCorrect == true || _isAutoAdvancing) return;
 
-      int nextEx;
-      if (!wasCustom && isFinalOfLevel) {
-        ref.read(childProfileProvider.notifier).advanceLevel(GameType.visualMath);
-        nextEx = 1;
-      } else if (!wasCustom) {
-        nextEx = _exerciseNumber + 1;
-      } else {
-        nextEx = _exerciseNumber;
-      }
+    if (_enteredDigits.trim().isEmpty) {
+      TeacherVoiceService.instance.speak('Escribe tu respuesta con los botones numéricos y luego toca Listo.');
+      return;
+    }
 
-      if (!wasCustom) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('math_exercise_index', nextEx);
-      }
+    final answer = int.tryParse(_enteredDigits);
+    final profile = ref.read(childProfileProvider);
 
-      await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
-      await Future.delayed(const Duration(milliseconds: 1000));
-
-      if (mounted) {
+    if (answer == _correctResult) {
+      // Si el nivel es mayor a 7, ahora debe escribir el nombre del número en letras
+      if (profile.mathLevel > 7) {
         setState(() {
-          _exerciseNumber = nextEx;
+          _currentStep = MathStep.word;
+          _isCorrect = null;
+          _isTip = false;
+          _teacherSpeech =
+              '¡Correcto! El número es $_correctResult. Ahora escribe con letras cómo se dice este número:';
         });
-
-        // Si subió a nivel 3 o 6, mostramos el preámbulo explicativo de la nueva operación
-        if (isFinalOfLevel) {
-          final newLevel = ref.read(childProfileProvider).mathLevel;
-          if (newLevel == 3) {
-            await MathPreambleDialog.show(context, initialOperation: MathOperation.multiplication);
-          } else if (newLevel == 6) {
-            await MathPreambleDialog.show(context, initialOperation: MathOperation.division);
-          }
-        }
-
-        _generateExercise();
+        TeacherVoiceService.instance.speak(_teacherSpeech);
+        return;
       }
+
+      // Si es nivel <= 7, completa el ejercicio
+      _completeExerciseSuccessfully();
     } else {
+      // El niño se equivocó
+      _exerciseMistakes++;
+      _earnedStar = false; // REGLA: no le des la estrella ni por valido los errores
+
+      setState(() {
+        _isCorrect = false;
+        _isTip = true;
+      });
+
       String hint = '';
       switch (_currentOperation) {
         case MathOperation.addition:
@@ -404,37 +384,167 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
           break;
       }
 
+      if (_exerciseMistakes == 1) {
+        // REGLA: "si se equivoca explicalo"
+        final tutorState = ref.read(tutorProvider);
+        final feedback = await tutorState.coordinator.speakFeedback(
+          TutorContext(
+            childName: profile.name,
+            childAge: 6,
+            eventType: TutorEventType.mathIncorrect,
+            gameName: 'Mundo Matemático',
+            topicOrOperation: '$_firstGroup ${_currentOperation.symbol} $_secondGroup',
+            childMistake: 'Escribió $answer en vez de $_correctResult',
+            pedagogicalHint: hint,
+          ),
+        );
+
+        if (mounted) {
+          setState(() {
+            _teacherSpeech = feedback.speechText;
+            _enteredDigits = ''; // Limpiar para que reintente
+          });
+        }
+      } else {
+        // REGLA: "si se vuelve a equivocar facilitalo un poco pero no le des la estrella ni por valido los errores"
+        setState(() {
+          _isFacilitated = true; // Activa ayuda visual numerando los objetos
+          _enteredDigits = '';
+          _teacherSpeech =
+              '¡No te preocupes! Te lo he facilitado mostrando los números arriba de cada uno para que los cuentes directo. ¡Inténtalo de nuevo!';
+        });
+        TeacherVoiceService.instance.speak(_teacherSpeech);
+      }
+    }
+  }
+
+  /// Validación del nombre del número en letras (Nivel > 7)
+  void _submitWordAnswer() async {
+    if (_isCorrect == true || _isAutoAdvancing) return;
+
+    final word = _wordController.text.trim();
+    if (word.isEmpty) {
+      TeacherVoiceService.instance.speak('Escribe cómo se dice el número $_correctResult en letras.');
+      return;
+    }
+
+    final isWordCorrect = NumberWordsHelper.matches(word, _correctResult);
+
+    if (isWordCorrect) {
+      _completeExerciseSuccessfully();
+    } else {
+      _exerciseMistakes++;
+      _earnedStar = false; // REGLA: No estrella por errores
+
+      final correctWord = NumberWordsHelper.toWords(_correctResult);
+
       setState(() {
-        _selectedAnswer = answer;
         _isCorrect = false;
         _isTip = true;
       });
 
-      final profile = ref.read(childProfileProvider);
-      final tutorState = ref.read(tutorProvider);
-      final feedback = await tutorState.coordinator.speakFeedback(
-        TutorContext(
-          childName: profile.name,
-          childAge: 6,
-          eventType: TutorEventType.mathIncorrect,
-          gameName: 'Mundo Matemático',
-          topicOrOperation: '$_firstGroup ${_currentOperation.symbol} $_secondGroup',
-          childMistake: 'Eligió $answer en vez de $_correctResult',
-          pedagogicalHint: hint,
-        ),
-      );
-
-      if (mounted) {
+      if (_exerciseMistakes <= 2) {
+        // Explicación
         setState(() {
-          _teacherSpeech = feedback.speechText;
+          _teacherSpeech =
+              '¡Casi! El número $_correctResult se escribe "$correctWord". Escucha cómo suena e inténtalo otra vez.';
         });
+        TeacherVoiceService.instance.speak(_teacherSpeech);
+      } else {
+        // Facilitado en palabras
+        final hint = correctWord.length > 3 ? correctWord.substring(0, 3) : correctWord.substring(0, 1);
+        setState(() {
+          _isFacilitated = true;
+          _teacherSpeech = '¡Te ayudo! La palabra empieza con "$hint...". ¡Tú puedes completarla!';
+        });
+        TeacherVoiceService.instance.speak(_teacherSpeech);
       }
+    }
+  }
+
+  /// Conclusión exitosa del ejercicio
+  Future<void> _completeExerciseSuccessfully() async {
+    final profile = ref.read(childProfileProvider);
+    final isFinalOfLevel = _exerciseNumber >= totalMathExercises;
+    final wasCustom = _activeCustomExercise != null;
+
+    setState(() {
+      _isCorrect = true;
+      _isTip = false;
+      _isAutoAdvancing = true;
+
+      if (_earnedStar) {
+        _confettiController.play();
+        if (wasCustom) {
+          _teacherSpeech =
+              '¡Bravo ${profile.name}! ¡Resolviste con éxito el desafío especial de mamá y papá! ¡Te ganaste 2 estrellas de premio!';
+        } else if (isFinalOfLevel) {
+          _teacherSpeech =
+              '¡Increíble logro ${profile.name}! ¡Completaste los 100 ejercicios del Nivel ${profile.mathLevel}! ¡Subes al Nivel ${profile.mathLevel + 1} con nuevos aprendizajes!';
+        } else {
+          _teacherSpeech =
+              '¡Maravilloso! $_firstGroup ${_currentOperation.symbol} $_secondGroup es igual a $_correctResult. ¡Ganaste una estrella!';
+        }
+      } else {
+        // Resuelto con ayuda tras errores: mensaje formativo sin estrellas
+        _teacherSpeech =
+            '¡Muy bien aprendido! Resolviste el ejercicio: $_firstGroup ${_currentOperation.symbol} $_secondGroup = $_correctResult. ¡Sigamos practicando!';
+      }
+    });
+
+    if (wasCustom) {
+      ref.read(customExercisesProvider.notifier).markCompleted(_activeCustomExercise!.id);
+      if (_earnedStar) {
+        ref.read(childProfileProvider.notifier).addStars(2);
+      }
+    } else {
+      // REGLA CRÍTICA: no le des la estrella ni por valido los errores
+      ref.read(childProfileProvider.notifier).recordWin(
+            gameType: GameType.visualMath,
+            awardStars: _earnedStar,
+          );
+    }
+
+    int nextEx;
+    if (!wasCustom && isFinalOfLevel) {
+      ref.read(childProfileProvider.notifier).advanceLevel(GameType.visualMath);
+      nextEx = 1;
+    } else if (!wasCustom) {
+      nextEx = _exerciseNumber + 1;
+    } else {
+      nextEx = _exerciseNumber;
+    }
+
+    if (!wasCustom) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('math_exercise_index', nextEx);
+    }
+
+    await TeacherVoiceService.instance.speakAndWait(_teacherSpeech);
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    if (mounted) {
+      setState(() {
+        _exerciseNumber = nextEx;
+      });
+
+      if (isFinalOfLevel) {
+        final newLevel = ref.read(childProfileProvider).mathLevel;
+        if (newLevel == 3) {
+          await MathPreambleDialog.show(context, initialOperation: MathOperation.multiplication);
+        } else if (newLevel == 6) {
+          await MathPreambleDialog.show(context, initialOperation: MathOperation.division);
+        }
+      }
+
+      _generateExercise();
     }
   }
 
   @override
   void dispose() {
     _confettiController.dispose();
+    _wordController.dispose();
     TeacherVoiceService.instance.stop();
     super.dispose();
   }
@@ -598,6 +708,37 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
 
                   const SizedBox(height: 6),
 
+                  // Alerta visual pedagógica de modo ayuda facilitado
+                  if (_isFacilitated) ...[
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.amber.shade400, width: 1.5),
+                      ),
+                      child: const Row(
+                        children: [
+                          Text('💡', style: TextStyle(fontSize: 20)),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '¡Modo Ayuda Activo! Cuenta los números que aparecen arriba de cada objeto para descubrir el resultado.',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF6D4C41),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 6),
+
                   // Tarjeta gráfica representativa
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -611,108 +752,37 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
-                  // Expresión matemática en texto grande
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      '$_firstGroup ${_currentOperation.symbol} $_secondGroup = ?',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ),
+                  // PASO 1: Ingreso de la respuesta numérica con el teclado
+                  if (_currentStep == MathStep.number) ...[
+                    _buildEquationDisplay(),
+                    const SizedBox(height: 14),
+                    _buildNumericKeypad(),
+                  ],
 
-                  const SizedBox(height: 18),
-
-                  // Botones de opciones
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _options.map((option) {
-                        final isSelected = _selectedAnswer == option;
-                        final isAnswerCorrect = option == _correctResult;
-
-                        Color btnColor = Colors.white;
-                        Color txtColor = AppColors.textDark;
-
-                        if (isSelected) {
-                          if (_isCorrect == true) {
-                            btnColor = AppColors.playfulGreen;
-                            txtColor = Colors.white;
-                          } else {
-                            btnColor = Colors.orange.shade300;
-                            txtColor = Colors.white;
-                          }
-                        } else if (_isCorrect == true && isAnswerCorrect) {
-                          btnColor = AppColors.playfulGreen.withValues(alpha: 0.3);
-                        }
-
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: InkWell(
-                              onTap: () => _checkAnswer(option),
-                              borderRadius: BorderRadius.circular(20),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 250),
-                                height: 68,
-                                decoration: BoxDecoration(
-                                  color: btnColor,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: isSelected ? Colors.transparent : Colors.grey.shade300,
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.06),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    )
-                                  ],
-                                ),
-                                child: Center(
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        '$option',
-                                        style: TextStyle(
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.bold,
-                                          color: txtColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                  // PASO 2 (Nivel > 7): Escritura del nombre del número en letras
+                  if (_currentStep == MathStep.word) ...[
+                    _buildWordInputSection(),
+                  ],
 
                   if (_isAutoAdvancing) ...[
                     const SizedBox(height: 16),
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.check_circle, color: AppColors.playfulGreen, size: 24),
-                        SizedBox(width: 8),
+                        Icon(
+                          _earnedStar ? Icons.star_rounded : Icons.check_circle,
+                          color: _earnedStar ? Colors.orange : AppColors.playfulGreen,
+                          size: 26,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          '¡Excelente! Avanzando...',
+                          _earnedStar ? '¡Estrella Ganada! Avanzando...' : '¡Ejercicio Aprendido! Avanzando...',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.playfulGreen,
+                            color: _earnedStar ? Colors.orange.shade800 : AppColors.playfulGreen,
                           ),
                         ),
                       ],
@@ -727,48 +797,304 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
     );
   }
 
+  /// Muestra la expresión matemática con el casillero numérico editable
+  Widget _buildEquationDisplay() {
+    final hasInput = _enteredDigits.isNotEmpty;
+    Color boxColor = Colors.white;
+    Color borderColor = AppColors.primaryBlue;
+
+    if (_isCorrect == true) {
+      boxColor = Colors.green.shade50;
+      borderColor = AppColors.playfulGreen;
+    } else if (_isCorrect == false) {
+      boxColor = Colors.orange.shade50;
+      borderColor = Colors.orange.shade700;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '$_firstGroup ${_currentOperation.symbol} $_secondGroup = ',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            constraints: const BoxConstraints(minWidth: 84, minHeight: 56),
+            decoration: BoxDecoration(
+              color: boxColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: borderColor, width: 2.5),
+              boxShadow: [
+                BoxShadow(
+                  color: borderColor.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              hasInput ? _enteredDigits : '?',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                color: hasInput ? AppColors.textDark : AppColors.primaryBlue.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Teclado numérico táctil infantil (teclas grandes, cómodas y coloridas)
+  Widget _buildNumericKeypad() {
+    final keys = [
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+      ['7', '8', '9'],
+      ['DEL', '0', 'OK'],
+    ];
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 360),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: keys.map((row) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: row.map((key) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    child: _buildKeypadButton(key),
+                  ),
+                );
+              }).toList(),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildKeypadButton(String key) {
+    final isDel = key == 'DEL';
+    final isOk = key == 'OK';
+
+    Color bgColor = Colors.white;
+    Widget child;
+
+    if (isDel) {
+      bgColor = Colors.orange.shade50;
+      child = const Icon(Icons.backspace_outlined, size: 24, color: Colors.deepOrange);
+    } else if (isOk) {
+      bgColor = AppColors.playfulGreen;
+      child = const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.check_rounded, color: Colors.white, size: 22),
+          SizedBox(width: 4),
+          Text(
+            'Listo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ],
+      );
+    } else {
+      child = Text(
+        key,
+        style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.textDark),
+      );
+    }
+
+    return Material(
+      color: bgColor,
+      elevation: 2,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: _isAutoAdvancing ? null : () => _onKeypadPress(key),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          height: 54,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isOk
+                  ? Colors.green.shade600
+                  : isDel
+                      ? Colors.orange.shade300
+                      : Colors.grey.shade300,
+              width: 1.5,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  /// Sección de escritura en letras para niveles > 7
+  Widget _buildWordInputSection() {
+    final correctWord = NumberWordsHelper.toWords(_correctResult);
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 420),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade50,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.purple.shade200, width: 2),
+            ),
+            child: Column(
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('✍️', style: TextStyle(fontSize: 24)),
+                    SizedBox(width: 8),
+                    Text(
+                      'Desafío Nivel 7+: Escribe en letras',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '¿Cómo se escribe el número $_correctResult?',
+                  style: const TextStyle(fontSize: 14, color: AppColors.textDark),
+                ),
+                if (_isFacilitated) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '💡 Pista: Empieza con "${correctWord.substring(0, min(3, correctWord.length))}..." (${correctWord.length} letras)',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown.shade800,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _wordController,
+            textCapitalization: TextCapitalization.none,
+            autocorrect: false,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            decoration: InputDecoration(
+              hintText: 'Ej: ${_correctResult <= 20 ? "doce, quince..." : "veinte..."}',
+              fillColor: Colors.white,
+              filled: true,
+              prefixIcon: const Icon(Icons.edit_rounded, color: Colors.purple),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.clear_rounded, color: Colors.grey),
+                onPressed: () => _wordController.clear(),
+              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+            ),
+            onSubmitted: (_) => _submitWordAnswer(),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isAutoAdvancing ? null : _submitWordAnswer,
+              icon: const Icon(Icons.check_circle_rounded, size: 22),
+              label: const Text(
+                'Comprobar Palabra ✓',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.playfulGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGraphicContent() {
     switch (_currentOperation) {
       case MathOperation.addition:
         return Column(
           children: [
-            _buildNumberRepresentation(_firstGroup, _currentEmoji),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+            _buildNumberRepresentation(_firstGroup, _currentEmoji, startIndex: 1),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(
                 '+',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w900,
                   color: AppColors.primaryBlue,
                 ),
               ),
             ),
-            _buildNumberRepresentation(_secondGroup, _currentEmoji),
+            _buildNumberRepresentation(_secondGroup, _currentEmoji, startIndex: _firstGroup + 1),
           ],
         );
 
       case MathOperation.subtraction:
         return Column(
           children: [
-            _buildNumberRepresentation(_firstGroup, _currentEmoji),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+            _buildNumberRepresentation(_firstGroup, _currentEmoji, startIndex: 1),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(
                 '−',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w900,
                   color: AppColors.primaryBlue,
                 ),
               ),
             ),
-            _buildNumberRepresentation(_secondGroup, _currentEmoji),
+            _buildNumberRepresentation(_secondGroup, _currentEmoji, startIndex: 1, isSubtracted: true),
           ],
         );
 
       case MathOperation.multiplication:
-        // Representación multiplicativa: N grupos iguales de M elementos
         return Column(
           children: [
             Text(
@@ -788,21 +1114,34 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.purple.shade200, width: 2),
                   ),
-                  child: Wrap(
-                    spacing: 4,
-                    children: List.generate(
-                      _secondGroup.clamp(1, 6),
-                      (itemIndex) => Text(_currentEmoji, style: const TextStyle(fontSize: 24)),
-                    ),
+                  child: Column(
+                    children: [
+                      if (_isFacilitated)
+                        Text('Grupo ${groupIndex + 1}',
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.purple)),
+                      Wrap(
+                        spacing: 4,
+                        children: List.generate(
+                          _secondGroup.clamp(1, 6),
+                          (itemIndex) => Text(_currentEmoji, style: const TextStyle(fontSize: 24)),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }),
             ),
+            if (_isFacilitated) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Pista: ${List.generate(_firstGroup, (i) => "$_secondGroup").join(" + ")} = $_correctResult',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.purple),
+              ),
+            ],
           ],
         );
 
       case MathOperation.division:
-        // Representación de división: Repartir el total en partes iguales
         return Column(
           children: [
             Text(
@@ -839,23 +1178,54 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
                 );
               }),
             ),
+            if (_isFacilitated) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Pista: A cada uno le tocan $_correctResult porque $_secondGroup × $_correctResult = $_firstGroup',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF00838F)),
+              ),
+            ],
           ],
         );
     }
   }
 
-  Widget _buildNumberRepresentation(int count, String emoji) {
+  Widget _buildNumberRepresentation(int count, String emoji, {int startIndex = 1, bool isSubtracted = false}) {
     if (count <= 12) {
       return Wrap(
-        spacing: 6,
-        runSpacing: 6,
+        spacing: 8,
+        runSpacing: 8,
         alignment: WrapAlignment.center,
         children: List.generate(
           count,
-          (i) => FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(emoji, style: const TextStyle(fontSize: 30)),
-          ),
+          (i) {
+            final orderNumber = startIndex + i;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isFacilitated)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: isSubtracted ? Colors.red.shade100 : Colors.blue.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$orderNumber',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isSubtracted ? Colors.red.shade900 : Colors.blue.shade900,
+                      ),
+                    ),
+                  ),
+                Opacity(
+                  opacity: isSubtracted ? 0.6 : 1.0,
+                  child: Text(emoji, style: const TextStyle(fontSize: 30)),
+                ),
+              ],
+            );
+          },
         ),
       );
     }
@@ -877,9 +1247,12 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade100,
+                  color: isSubtracted ? Colors.red.shade50 : Colors.amber.shade100,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.shade700, width: 2),
+                  border: Border.all(
+                    color: isSubtracted ? Colors.red.shade400 : Colors.amber.shade700,
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.amber.shade200.withValues(alpha: 0.5),
@@ -909,7 +1282,10 @@ class _VisualMathScreenState extends ConsumerState<VisualMathScreen> {
             // Unidades sueltas
             if (units > 0)
               ...List.generate(units, (i) {
-                return Text(emoji, style: const TextStyle(fontSize: 22));
+                return Opacity(
+                  opacity: isSubtracted ? 0.6 : 1.0,
+                  child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                );
               }),
           ],
         ),
