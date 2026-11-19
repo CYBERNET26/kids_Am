@@ -1,9 +1,9 @@
 {
-  "version": "1.0.7",
-  "versionCode": 8,
-  "title": "Kids Am v1.0.7 - Teclado Numérico en Matemáticas, Nivel 7+ con Escritura y Ayuda Adaptativa",
+  "version": "1.0.8",
+  "versionCode": 9,
+  "title": "Kids Am v1.0.8 - Versión Final con Actualizaciones Dinámicas en Caliente (OTA)",
   "releaseDate": "2026-11-19",
-  "changelog": "### 🚀 Novedades y Agregados:\n• Teclado Numérico Exclusivo en Matemáticas: Se reemplazaron las opciones múltiples por un teclado numérico táctil infantil para escribir las respuestas directamente.\n• Nivel 7+ con Escritura del Nombre de los Números: Desafío adicional para escribir en letras cómo se llama el número del resultado.\n• Pedagogía Adaptativa en Errores: Si el niño se equivoca por primera vez, la Seño Sofía explica el concepto con metáforas; al segundo error, activa el Modo Ayuda facilitando el conteo visual con números encima de cada objeto.\n• Regla Estricta Anti-Premios Inmerecidos: Los errores nunca se dan por válidos y los ejercicios resueltos con ayuda facilitada no otorgan estrellas.",
-  "apkFileName": "KidsAm-installer-v1.0.7.apk",
-  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.7.apk"
+  "changelog": "### 🚀 Novedades y Agregados:\n• Actualizaciones en Caliente (OTA): Sistema de sincronización de contenidos (cuentos, videos y niveles) directo desde la nube sin tener que reinstalar la app ni pasar por el instalador de paquetes de Android.\n• Modo Tutor Inteligente con Gemini AI y Modo Clásico offline-first agnóstico al progreso del niño.\n• Matemáticas con Teclado Numérico infantil exclusivo, escritura en letras para nivel 7+ y pedagogía adaptativa con Seño Sofía.",
+  "apkFileName": "KidsAm-installer-v1.0.8.apk",
+  "downloadUrl": "https://raw.githubusercontent.com/samuel031069/kids_Am/main/KidsAm-installer-v1.0.8.apk"
 }

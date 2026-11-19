@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kids_am/features/stories/data/default_stories.dart';
 import 'package:kids_am/features/stories/domain/models/story_item.dart';
+import 'package:kids_am/features/dynamic_content/data/services/dynamic_content_service.dart';
 
 class StoriesState {
   final List<StoryItem> stories;
@@ -42,10 +43,29 @@ class StoriesNotifier extends Notifier<StoriesState> {
     final savedStars = prefs.getInt(_starsKey) ?? 1;
     final savedCompleted = prefs.getStringList(_completedKey) ?? [];
 
-    state = state.copyWith(
-      starsPerCorrectQuestion: savedStars,
-      completedStoryIds: savedCompleted.toSet(),
-    );
+    try {
+      final activeBundle = await DynamicContentService.loadActiveBundle();
+      final activeStories =
+          activeBundle.stories.isNotEmpty ? activeBundle.stories : defaultStories;
+
+      state = state.copyWith(
+        stories: activeStories,
+        starsPerCorrectQuestion: savedStars,
+        completedStoryIds: savedCompleted.toSet(),
+      );
+    } catch (_) {
+      state = state.copyWith(
+        starsPerCorrectQuestion: savedStars,
+        completedStoryIds: savedCompleted.toSet(),
+      );
+    }
+  }
+
+  /// Actualiza en caliente la lista de cuentos desde una sincronización OTA
+  void updateStoriesList(List<StoryItem> newStories) {
+    if (newStories.isNotEmpty) {
+      state = state.copyWith(stories: newStories);
+    }
   }
 
   Future<void> setStarsPerCorrectQuestion(int stars) async {

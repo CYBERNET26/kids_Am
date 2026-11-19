@@ -73,6 +73,8 @@ class VideoItem {
     };
   }
 
+  Map<String, dynamic> toJson() => toMap();
+
   factory VideoItem.fromMap(Map<String, dynamic> map) {
     final rawUrl = map['urlOrAssetPath'] as String;
     final isYt = rawUrl.contains('youtube.com') || rawUrl.contains('youtu.be');
@@ -95,4 +97,6 @@ class VideoItem {
       rewardStars: map['rewardStars'] as int? ?? 3,
     );
   }
+
+  factory VideoItem.fromJson(Map<String, dynamic> json) => VideoItem.fromMap(json);
 }

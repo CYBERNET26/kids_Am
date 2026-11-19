@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:kids_am/features/tutor/data/services/gemini_ai_tutor_service.dart';
 import 'package:kids_am/features/tutor/presentation/providers/tutor_provider.dart';
 import 'package:kids_am/features/tutor/presentation/widgets/ai_key_help_dialog.dart';
+import 'package:kids_am/features/dynamic_content/presentation/providers/dynamic_content_provider.dart';
 
 class ParentGateScreen extends StatefulWidget {
   const ParentGateScreen({super.key});
@@ -447,6 +448,9 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
             context: context,
             dismissedVersion: null,
           );
+
+      // Sincronizar contenidos en caliente (OTA) de forma ultraligera en segundo plano
+      ref.read(dynamicContentProvider.notifier).syncContent();
     } catch (_) {}
   }
 
@@ -2019,6 +2023,140 @@ class _ParentDashboardViewState extends ConsumerState<_ParentDashboardView>
                             ],
                           ),
                         ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 14),
+
+            // SECCIÓN: ACTUALIZACIONES DE CONTENIDO EN CALIENTE (OTA)
+            Consumer(
+              builder: (context, ref, _) {
+                final dynamicState = ref.watch(dynamicContentProvider);
+                final dynamicNotifier = ref.read(dynamicContentProvider.notifier);
+
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(color: Colors.teal.shade200, width: 1.5),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.teal.shade50,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.cloud_sync_rounded, color: Colors.teal, size: 26),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Flexible(
+                                        child: Text(
+                                          'Actualizaciones en Caliente (OTA)',
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.teal.shade100,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          'Paquete v${dynamicState.localVersion}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.teal.shade900,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Text(
+                                    'Descarga instantánea de nuevos cuentos, videos y niveles sin reinstalar la app.',
+                                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: dynamicState.isSyncing
+                                    ? null
+                                    : () async {
+                                        final res = await dynamicNotifier.syncContent(force: true);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(res.message),
+                                              backgroundColor: res.isError
+                                                  ? Colors.orange.shade800
+                                                  : Colors.teal.shade700,
+                                              duration: const Duration(seconds: 4),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                icon: dynamicState.isSyncing
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      )
+                                    : const Icon(Icons.sync_rounded, size: 20),
+                                label: Text(dynamicState.isSyncing
+                                    ? 'Sincronizando...'
+                                    : 'Sincronizar Contenido Ahora'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.teal.shade700,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                ref.read(updateProvider.notifier).checkForUpdates(
+                                      isManual: true,
+                                      context: context,
+                                    );
+                              },
+                              icon: const Icon(Icons.system_update_rounded, size: 18),
+                              label: const Text('Comprobar APK'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.grey.shade800,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

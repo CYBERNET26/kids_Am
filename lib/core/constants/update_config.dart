@@ -15,6 +15,9 @@ class UpdateConfig {
   static String get rawVersionJsonUrl =>
       'https://raw.githubusercontent.com/$repoOwner/$repoName/$defaultBranch/version.json';
 
+  static String get rawContentBundleUrl =>
+      'https://raw.githubusercontent.com/$repoOwner/$repoName/$defaultBranch/content_bundle.json';
+
   static String get rawApkDownloadUrl =>
       'https://raw.githubusercontent.com/$repoOwner/$repoName/$defaultBranch/KidsAm-installer-v1.0.1.apk';
 

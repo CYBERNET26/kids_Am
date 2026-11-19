@@ -71,6 +71,16 @@ class VideoLibraryNotifier extends Notifier<List<VideoItem>> {
     state = defaultEducationalVideos;
     _saveToStorage(defaultEducationalVideos);
   }
+
+  /// Sincroniza en caliente los videos oficiales desde una actualización OTA,
+  /// conservando intactos los videos personalizados que el padre haya agregado.
+  void syncWithOTAVideos(List<VideoItem> otaVideos) {
+    if (otaVideos.isEmpty) return;
+    final customVideos = state.where((v) => v.id.startsWith('custom_')).toList();
+    final updated = [...otaVideos, ...customVideos];
+    state = updated;
+    _saveToStorage(updated);
+  }
 }
 
 final videoLibraryProvider =
